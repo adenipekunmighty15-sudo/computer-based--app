@@ -1,0 +1,4 @@
+/* Entry stylesheet. The layers below are the whole design system; they are
+   imported from main.tsx in cascade order rather than with CSS @import so the
+   build has a single, inspectable ordering. This file intentionally holds no
+   layer imports of its own — main.tsx owns the order. */

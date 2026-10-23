@@ -1,0 +1,311 @@
+/* ============================================================================
+   Design tokens — the single source of truth for every raw value in the app.
+   ----------------------------------------------------------------------------
+   Per docs/design-system-plan.md, raw values belong here and nowhere else.
+   main.tsx imports this before base/canvas/primitives/shell/data/exam/motion/auth
+   so the cascade order is inspectable in one place.
+
+   Structure
+     1. Surfaces & ink          (the dark "hall" register)
+     2. Accents
+     3. Paper register          (the light exam sheet — always light, in both themes)
+     4. Role accent
+     5. Typography
+     6. Space, radii, shadows
+     7. Motion
+     8. Z-index
+     9. Layout, controls, table metrics
+    10. Focus-Zoom aliases      (--c-* consumed by the dive/ascent components)
+    11. Preference variants     (data-density / data-fontsize / data-fontfam)
+    12. Theme variants         (data-theme='light', data-surface, data-contrast)
+   ============================================================================ */
+
+:root {
+  /* ── 1. Surfaces & ink ───────────────────────────────────────────────────── */
+  --hall:        #0b0f14;   /* the room the app sits in — page background */
+  --hall-glow:   rgb(92 200 224 / 0.055);
+  --hall-glow-2: rgb(201 162 39 / 0.035);
+  --desk:        #11161d;   /* chrome: rail, topbar, modal, drawer */
+  --slab:        #171d26;   /* panels, cards */
+  --slab-2:      #1f2733;   /* inset fills, hover fills, rows */
+  --rule:        rgb(255 255 255 / 0.07);  /* hairline */
+  --rule-hi:     rgb(255 255 255 / 0.13);  /* emphasised hairline */
+
+  --ink:         #e7edf5;   /* primary text */
+  --ink-2:       #a6b2c2;   /* secondary text */
+  --ink-3:       #8a99ac;   /* tertiary, quiet, placeholder - improved WCAG AA contrast */
+
+  /* ── 2. Accents ───────────────────────────────────────────────────────────── */
+  --chalk:         #5cc8e0;  /* cool cyan — the house accent */
+  --chalk-deep:    #1b6b7e;  /* chalk pressed onto light paper (needs contrast) */
+  --chalk-soft:    rgb(92 200 224 / 0.13);
+  --chalk-line:    rgb(92 200 224 / 0.28);
+
+  --jade:          #3ecf8e;
+  --jade-ink:      #06251a;  /* text on a jade fill */
+  --jade-soft:     rgb(62 207 142 / 0.13);
+
+  --vermilion:     #e8694e;
+  --vermilion-ink: #2b0d06;  /* text on a vermilion fill */
+  --vermilion-soft:rgb(232 105 78 / 0.13);
+
+  --brass:         #c9a227;
+  --brass-ink:     #1d1704;  /* text on a brass fill */
+  --brass-soft:    rgb(201 162 39 / 0.14);
+
+  --gold:          #d4af37;  /* the seal — close to brass, warmer */
+  --gold-soft:     rgb(212 175 55 / 0.14);
+
+  /* ── 3. Paper register ───────────────────────────────────────────────────── */
+  /* The exam sheet is a printed artefact: it stays light paper in every theme. */
+  --sheet:       #f8f7f3;
+  --sheet-2:     #f1efe8;
+  --sheet-rule:  #ddd9cc;
+  --graphite:    #1a1c1f;    /* primary ink on paper */
+  --graphite-2:  #5c6168;    /* secondary ink on paper */
+  --graphite-3:  #8d9299;    /* tertiary ink on paper */
+
+  /* ── 4. Role accent ──────────────────────────────────────────────────────── */
+  --role:      var(--chalk);
+  --role-ink:  var(--hall);   /* text on a role fill */
+  --role-soft: var(--chalk-soft);
+  --role-line: var(--chalk-line);
+
+  /* ── 5. Typography ────────────────────────────────────────────────────────── */
+  --font-ui:      'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Archivo Variable', 'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-serif:   'Source Serif 4', Georgia, serif;
+  --font-readable:'Atkinson Hyperlegible', Verdana, sans-serif;
+
+  --t-2xs:  0.6875rem;   /* 11px */
+  --t-xs:   0.75rem;     /* 12px */
+  --t-sm:   0.8125rem;   /* 13px */
+  --t-base: 0.875rem;    /* 14px */
+  --t-md:   1rem;        /* 16px */
+  --t-lg:   1.1875rem;   /* 19px */
+  --t-xl:   1.5rem;      /* 24px */
+  --t-2xl:  2rem;        /* 32px */
+  --t-3xl:  2.75rem;     /* 44px */
+
+  --lh-tight:  1.15;
+  --lh-snug:   1.35;
+  --lh:        1.5;
+  --lh-loose:  1.72;
+
+  --track-tight:   -0.011em;
+  --track-display: -0.022em;
+  --track-caps:     0.085em;
+
+  /* ── 6. Space, radii, shadows ─────────────────────────────────────────────── */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-7:  32px;
+  --s-8:  40px;
+  --s-9:  48px;
+  --s-10: 64px;
+  --s-11: 80px;
+
+  --r-xs:   4px;
+  --r-sm:   7px;
+  --r-md:   10px;
+  --r-lg:   14px;
+  --r-xl:   20px;
+  --r-pill: 999px;
+
+  --sh-1: 0 1px 2px rgb(0 0 0 / 0.28);
+  --sh-2: 0 2px 6px -1px rgb(0 0 0 / 0.34), 0 1px 2px rgb(0 0 0 / 0.22);
+  --sh-3: 0 10px 24px -6px rgb(0 0 0 / 0.44), 0 2px 6px rgb(0 0 0 / 0.24);
+  --sh-4: 0 28px 60px -14px rgb(0 0 0 / 0.58), 0 8px 20px -8px rgb(0 0 0 / 0.34);
+
+  --blur-sm: 6px;
+  --blur-md: 12px;
+  --blur-lg: 24px;
+
+  /* ── 7. Motion ────────────────────────────────────────────────────────────── */
+  --dur-1: 120ms;
+  --dur-2: 180ms;
+  --dur-3: 260ms;
+  --dur-4: 380ms;
+  --dur-5: 560ms;
+  --dur-6: 900ms;
+
+  --ease:       cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:cubic-bezier(0.65, 0, 0.35, 1);
+
+  --enter-delay:  0ms;
+  --reveal-delay: 0ms;
+
+  /* ── 8. Z-index ───────────────────────────────────────────────────────────── */
+  --z-rail:    20;
+  --z-sticky:  30;
+  --z-drawer:  60;
+  --z-modal:   80;
+  --z-palette: 90;
+  --z-toast:   100;
+
+  /* ── 9. Layout, controls, table metrics ───────────────────────────────────── */
+  --rail-w:            240px;
+  --rail-w-collapsed:  64px;
+  --topbar-h:          56px;
+  --page-max:          1320px;
+  --pad-page:          var(--s-6);
+  --drawer-w:          520px;
+
+  --control-h:    36px;
+  --control-h-sm: 30px;
+  --control-h-lg: 44px;
+
+  --cell-px:   var(--s-4);
+  --row-py:    11px;
+  --fs-table:  var(--t-sm);
+  --table-max: none;
+
+  /* ── 10. Focus-Zoom aliases ───────────────────────────────────────────────── */
+  /* Read by the dive/ascent components and the exam OMR spotlight. */
+  --c-primary:      var(--chalk);
+  --c-primary-rgb:  92, 200, 224;
+  --c-surface:      var(--slab);
+  --c-glass:        rgb(255 255 255 / 0.06);
+  --c-glass-hover:  rgb(255 255 255 / 0.11);
+  --c-glass-border: var(--rule);
+  --c-glass-bg:     rgb(11 14 17 / 0.72);
+  --c-border:       var(--rule);
+  --c-text:         var(--ink);
+  --c-text-muted:   var(--ink-2);
+
+  --c-success: var(--jade);
+  --c-error:   var(--vermilion);
+  --c-warning: var(--brass);
+  --c-info:    var(--chalk);
+
+  --edge:    var(--role);      /* the accent edge drawn on elevated surfaces */
+  --bub-ink: transparent;      /* bubble label ink, overridden per state */
+
+  color-scheme: dark;
+}
+
+/* ── 11. Preference variants ────────────────────────────────────────────────── */
+
+/* Density — controls row rhythm and control heights. */
+[data-density='classic'] {
+  --row-py: 13px;
+  --cell-px: var(--s-5);
+  --pad-page: var(--s-7);
+}
+[data-density='minimal'] {
+  --row-py: 7px;
+  --cell-px: var(--s-3);
+  --pad-page: var(--s-5);
+  --control-h-sm: 26px;
+}
+[data-density='maximal'] {
+  --row-py: 18px;
+  --cell-px: var(--s-6);
+  --pad-page: var(--s-8);
+  --control-h: 40px;
+}
+
+/* Type size — scales the type ramp, never the layout. */
+[data-fontsize='s'] {
+  --t-2xs: 0.625rem; --t-xs: 0.6875rem; --t-sm: 0.75rem;   --t-base: 0.8125rem;
+  --t-md: 0.9375rem; --t-lg: 1.0625rem; --t-xl: 1.3125rem;
+  --t-2xl: 1.75rem;  --t-3xl: 2.25rem;
+}
+[data-fontsize='l'] {
+  --t-2xs: 0.75rem;   --t-xs: 0.8125rem; --t-sm: 0.875rem; --t-base: 0.9375rem;
+  --t-md: 1.0625rem;  --t-lg: 1.3125rem; --t-xl: 1.6875rem;
+  --t-2xl: 2.25rem;   --t-3xl: 3rem;
+}
+
+/* Type family — swaps the reading face across the whole app. */
+[data-fontfam='serif'] {
+  --font-ui: var(--font-serif);
+  --t-2xs: 0.75rem; --t-xs: 0.8125rem; --t-sm: 0.875rem; --t-base: 1rem;
+}
+[data-fontfam='readable'] {
+  --font-ui: var(--font-readable);
+  --t-base: 1rem;
+  --lh: 1.62;
+}
+
+/* ── 12. Theme variants ─────────────────────────────────────────────────────── */
+
+[data-theme='light'] {
+  --hall:        #f2f4f7;
+  --hall-glow:   rgb(27 107 126 / 0.05);
+  --hall-glow-2: rgb(201 162 39 / 0.04);
+  --desk:        #ffffff;
+  --slab:        #ffffff;
+  --slab-2:      #eef1f5;
+  --rule:        rgb(10 20 32 / 0.09);
+  --rule-hi:     rgb(10 20 32 / 0.16);
+
+  --ink:   #101720;
+  --ink-2: #465260;
+  --ink-3: #526070;
+
+  --chalk:       #12798e;
+  --chalk-soft:  rgb(18 121 142 / 0.1);
+  --chalk-line:  rgb(18 121 142 / 0.3);
+
+  --jade:         #1c7a52;
+  --jade-soft:    rgb(28 122 82 / 0.11);
+  --vermilion:    #b4472c;
+  --vermilion-soft: rgb(180 71 44 / 0.11);
+  --brass:        #8a6c07;
+  --brass-soft:   rgb(138 108 7 / 0.12);
+  --gold:         #8f7413;
+  --gold-soft:    rgb(143 116 19 / 0.12);
+
+  --role-ink: #ffffff;
+
+  --sh-1: 0 1px 2px rgb(10 20 32 / 0.07);
+  --sh-2: 0 2px 6px -1px rgb(10 20 32 / 0.09), 0 1px 2px rgb(10 20 32 / 0.05);
+  --sh-3: 0 10px 24px -6px rgb(10 20 32 / 0.12), 0 2px 6px rgb(10 20 32 / 0.06);
+  --sh-4: 0 28px 60px -14px rgb(10 20 32 / 0.2), 0 8px 20px -8px rgb(10 20 32 / 0.1);
+
+  --c-glass:        rgb(10 20 32 / 0.05);
+  --c-glass-hover:  rgb(10 20 32 / 0.09);
+  --c-glass-border: var(--rule);
+  --c-glass-bg:     rgb(255 255 255 / 0.86);
+
+  color-scheme: light;
+}
+
+/* Solid surfaces drop the blur/translucency for users who ask for it. */
+[data-surface='solid'] {
+  --c-glass:      transparent;
+  --c-glass-hover: var(--slab-2);
+  --c-glass-bg:   var(--desk);
+}
+
+/* ── Role accents ───────────────────────────────────────────────────────────── */
+/* Set by AuthScreen (.auth) and Shell (.app-shell) so the active portal is
+   legible from every accent in the system: buttons, rails, meters, bubbles. */
+
+[data-role='student'] {
+  --role:      #34d399;
+  --role-ink:  #052e21;
+  --role-soft: rgb(52 211 153 / 0.14);
+  --role-line: rgb(52 211 153 / 0.34);
+}
+[data-role='teacher'] {
+  --role:      #818cf8;
+  --role-ink:  #14174a;
+  --role-soft: rgb(129 140 248 / 0.14);
+  --role-line: rgb(129 140 248 / 0.34);
+}
+[data-theme='light'][data-role='student'] {
+  --role: #0f8f68;
+  --role-ink: #ffffff;
+}
+[data-theme='light'][data-role='teacher'] {
+  --role: #5457d6;
+  --role-ink: #ffffff;
+}

@@ -1,0 +1,785 @@
+/* ============================================================================
+   EXAM & PAPER — the sheet register.
+
+   A candidate is on a timer with a 45-minute paper in front of them. Nothing
+   in here competes for attention: no animation that moves, no card that
+   lifts, no gradient. The only things allowed to change are the answer, the
+   bubbles, the clock, and the progress line.
+   ========================================================================== */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   The paper. A cool off-white sheet with a faint grid, floated on the dark
+   hall. Reading long question stems is the one job the light surface does.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.sheet {
+  background: var(--sheet);
+  color: var(--graphite);
+  border: 1px solid var(--sheet-rule);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-3);
+  position: relative;
+}
+.sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image:
+    linear-gradient(rgb(26 28 31 / 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(26 28 31 / 0.028) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+.sheet > * { position: relative; }
+.sheet-pad { padding: clamp(18px, 3.2vw, 34px); }
+
+.sheet-masthead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-bottom: var(--s-4);
+  margin-bottom: var(--s-5);
+  border-bottom: 1px solid var(--sheet-rule);
+  flex-wrap: wrap;
+}
+.sheet-school {
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: #7a6a2e;
+}
+.sheet-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.6vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: var(--track-display);
+  line-height: 1.15;
+  margin-top: 4px;
+  color: var(--graphite);
+}
+.sheet-meta {
+  display: flex;
+  gap: var(--s-5);
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  color: var(--graphite-2);
+}
+.sheet-meta b { color: var(--graphite); font-weight: 600; }
+
+/* Section band. This is a real convention on a printed paper — "SECTION A —
+   answer all", "SECTION B — answer any two" — and it is reproduced exactly,
+   because candidates have read it a hundred times before. */
+.sheet-band {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding: 10px 13px;
+  margin: var(--s-6) 0 var(--s-4);
+  border: 1px solid var(--sheet-rule);
+  border-left: 3px solid var(--graphite);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--sheet-2);
+}
+.sheet-band:first-of-type { margin-top: 0; }
+.sheet-band-name {
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--graphite);
+}
+.sheet-band-rule {
+  font-size: var(--t-xs);
+  color: var(--graphite-2);
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.sheet-band-count {
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--graphite-2);
+  white-space: nowrap;
+}
+.sheet-band.optional { border-left-color: #b0642c; }
+.sheet-band.optional .sheet-band-count { color: #a4551f; }
+
+.q-stem {
+  font-size: var(--t-md);
+  line-height: 1.62;
+  color: var(--graphite);
+  margin: 0;
+}
+.q-stem + .q-options { margin-top: var(--s-4); }
+.q-no {
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--graphite-2);
+  margin-right: 8px;
+  user-select: none;
+}
+
+.q-figure {
+  margin: var(--s-4) 0 0;
+  padding: var(--s-3);
+  border: 1px solid var(--sheet-rule);
+  border-radius: var(--r-sm);
+  background: #fff;
+}
+.q-figure img { max-height: 320px; width: auto; margin-inline: auto; }
+
+/* A figure is a control, not a decoration: the labels are drawn for A4 and are
+   unreadable at row width, so the whole plate opens full-size. The hover state
+   has to say that without adding a second border around the drawing. */
+.fig-trigger {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: var(--r-xs);
+  font: inherit;
+  color: inherit;
+}
+.fig-trigger img { display: block; }
+.fig-trigger:focus-visible { outline: 2px solid var(--chalk); outline-offset: 3px; }
+.fig-zoom-hint {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  background: rgb(26 28 31 / 0.72);
+  color: #fff;
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease);
+  pointer-events: none;
+}
+.fig-trigger:hover .fig-zoom-hint,
+.fig-trigger:focus-visible .fig-zoom-hint { opacity: 1; }
+
+.q-figure figcaption {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--graphite-3);
+  text-align: center;
+}
+.q-figure.thumb { display: inline-block; margin: 6px 0 0; padding: 4px; }
+.q-figure.thumb img { max-height: 62px; }
+
+/* ── Full-size figure. A diagram is drawn at A4 width and every label on it is
+   sized from that; the only way a candidate or marker reads it on screen is at
+   full size, on paper, with the rest of the page out of the way. ───────────── */
+
+.fig-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgb(6 9 13 / 0.72);
+  backdrop-filter: blur(var(--blur-sm));
+}
+.fig-zoom {
+  position: fixed;
+  inset: clamp(10px, 3vh, 32px);
+  z-index: calc(var(--z-modal) + 1);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule-hi);
+  border-radius: var(--r-lg);
+  background: var(--desk);
+  box-shadow: var(--sh-4);
+  outline: none;
+}
+.fig-zoom-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--rule);
+}
+.fig-zoom-head h2 { font-size: var(--t-md); }
+.fig-zoom-kicker {
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--brass);
+  margin-bottom: 2px;
+}
+.fig-zoom-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fig-zoom-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  padding: var(--s-5);
+  background: var(--sheet);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+.fig-zoom-stage img {
+  max-width: min(100%, 1100px);
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  background: #fdfcf8;
+  box-shadow: var(--sh-3);
+  border-radius: var(--r-xs);
+}
+@media (max-width: 640px) {
+  .fig-zoom-stage { padding: var(--s-3); }
+}
+
+
+/* ── Options. A–D letters in a solid ink square, exactly like a printed
+   paper, so the muscle memory transfers. ────────────────────────────────── */
+
+.q-options { display: grid; gap: 7px; }
+.q-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--sheet-rule);
+  border-radius: var(--r-sm);
+  background: #fff;
+  cursor: pointer;
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  color: var(--graphite);
+  transition: border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease);
+}
+.q-option:hover { border-color: #9c9482; background: #fdfcf8; }
+.q-option-letter {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: var(--r-xs);
+  background: var(--sheet-2);
+  border: 1px solid var(--sheet-rule);
+  color: var(--graphite-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  transition: background var(--dur-2) var(--ease), color var(--dur-2) var(--ease),
+              border-color var(--dur-2) var(--ease);
+}
+.q-option[data-state='selected'] {
+  border-color: #1b6b7e;
+  background: #eaf6f8;
+}
+.q-option[data-state='selected'] .q-option-letter {
+  background: #1b6b7e;
+  border-color: #1b6b7e;
+  color: #fff;
+}
+.q-option[data-state='correct'] { border-color: #2c7a58; background: #eaf6ee; }
+.q-option[data-state='correct'] .q-option-letter { background: #2c7a58; border-color: #2c7a58; color: #fff; }
+.q-option[data-state='wrong'] { border-color: #b4462f; background: #fceeea; }
+.q-option[data-state='wrong'] .q-option-letter { background: #b4462f; border-color: #b4462f; color: #fff; }
+.q-option-locked { cursor: default; opacity: 0.72; }
+.q-option-locked:hover { border-color: var(--sheet-rule); background: #fff; }
+.q-option input { position: absolute; opacity: 0; pointer-events: none; }
+.q-option-note {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding-left: 8px;
+}
+.q-option[data-state='correct'] .q-option-note { color: #2c7a58; }
+/* The text is the only part allowed to wrap; the square, the note and the
+   padding stay put so a long option never shifts the answer letters. */
+.q-option-text { min-width: 0; }
+/* The real input is invisible, so focus has to be drawn on the square it
+   controls — otherwise a keyboard candidate tabs through four answers and
+   cannot tell which one they are on. */
+.q-option input:focus-visible + .q-option-letter {
+  outline: 2px solid #1b6b7e;
+  outline-offset: 2px;
+}
+
+.q-option[data-state='wrong'] .q-option-note { color: #b4462f; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Exam shell — no rail, no distractions. A single bar with the four facts
+   that matter: which paper, how far through, how long left, how to submit.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.hall {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--hall);
+}
+
+.hall-bar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: 9px var(--pad-page);
+  background: color-mix(in srgb, var(--hall) 92%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.hall-bar-id { min-width: 0; flex: 1 1 200px; }
+.hall-bar-title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: var(--track-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hall-bar-sub {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The clock. It is the only thing on the page allowed to move, and it changes
+   colour at the two thresholds that actually mean something: 25% left (find
+   the ones you skipped) and 5 minutes (stop). */
+.clock {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 4px 11px;
+  border: 1px solid var(--rule-hi);
+  border-radius: var(--r-md);
+  background: var(--desk);
+}
+.clock-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.clock-time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ink);
+}
+.clock[data-level='warn'] { border-color: color-mix(in srgb, var(--brass) 55%, transparent); background: var(--brass-soft); }
+.clock[data-level='warn'] .clock-time { color: var(--brass); }
+.clock[data-level='critical'] { border-color: var(--vermilion); background: var(--vermilion-soft); }
+.clock[data-level='critical'] .clock-time { color: var(--vermilion); }
+.clock[data-level='critical'] { animation: clock-throb 2s var(--ease) infinite; }
+
+.hall-progress {
+  flex: 1 1 160px;
+  min-width: 120px;
+  display: grid;
+  gap: 4px;
+}
+.hall-progress-track { height: 4px; border-radius: var(--r-pill); background: var(--slab-2); overflow: hidden; }
+/* display:block is load-bearing. The fill is an <i>, which is inline by default,
+   and an inline box ignores width entirely — so the count beside it climbed
+   0 → 100% while the bar itself stayed pinned at zero pixels. */
+.hall-progress-fill { display: block; width: 0; height: 100%; background: var(--role); transition: width var(--dur-4) var(--ease-out); }
+.hall-progress-legend {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  color: var(--ink-3);
+}
+
+.hall-body {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding: var(--s-5) var(--pad-page) var(--s-9);
+}
+
+.hall-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 296px;
+  gap: var(--s-5);
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .hall-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── The OMR map. This is the whole paper in one screen. ───────────────── */
+
+.omr {
+  position: sticky;
+  top: calc(var(--topbar-h) + var(--s-4));
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-4);
+  background: var(--desk);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+}
+@media (max-width: 1080px) {
+  .omr { position: static; }
+}
+
+.omr-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+.omr-head h2 { font-size: var(--t-md); }
+
+.omr-section + .omr-section { margin-top: var(--s-3); padding-top: var(--s-3); border-top: 1px solid var(--rule); }
+.omr-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-bottom: 7px;
+}
+.omr-section-name {
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* The answer sheet proper: numbers in a run, each a bubble. */
+.omr-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.omr-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 30px;
+  padding: 0;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--rule);
+  background: var(--hall);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease),
+              background var(--dur-2) var(--ease), transform var(--dur-1) var(--ease),
+              scale var(--dur-3) var(--ease-out), box-shadow var(--dur-2) var(--ease);
+}
+.omr-cell:focus-visible { outline: 2px solid var(--role); outline-offset: 2px; }
+.omr-cell:hover { border-color: var(--rule-hi); color: var(--ink); transform: translateY(-1px); }
+.omr-cell[data-state='answered'] { background: var(--role-soft); border-color: var(--role-line); color: var(--ink); }
+.omr-cell[data-state='chosen'] { border-color: var(--role); color: var(--role); border-style: dashed; }
+.omr-cell[data-state='flagged'] { border-color: var(--brass); color: var(--brass); }
+.omr-cell[data-current='true'] {
+  border-color: var(--role);
+  background: var(--role);
+  color: var(--role-ink);
+  box-shadow: 0 0 0 3px var(--role-soft);
+  scale: 1.12;
+}
+.omr-head-id { min-width: 0; }
+.omr-cell .flag-dot {
+  position: absolute;
+  margin: -18px -18px 0 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brass);
+}
+
+.omr-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 10px;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule);
+  font-size: var(--t-2xs);
+  color: var(--ink-2);
+}
+.omr-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.omr-legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--rule-hi);
+  flex: 0 0 auto;
+}
+.omr-legend i.answered { background: var(--role-soft); border-color: var(--role); }
+.omr-legend i.flagged { background: var(--brass-soft); border-color: var(--brass); }
+.omr-legend i.chosen { border-color: var(--role); border-style: dashed; }
+.omr-legend i.current { background: var(--role); border-color: var(--role); }
+
+.omr-tally { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: var(--r-md); overflow: hidden; }
+.omr-tally > div { display: grid; justify-items: center; gap: 1px; padding: 9px 4px; background: var(--hall); }
+.omr-tally b { font-family: var(--font-mono); font-size: var(--t-lg); font-weight: 600; line-height: 1; letter-spacing: -0.03em; }
+.omr-tally span { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+
+/* ── Exam controls ─────────────────────────────────────────────────────── */
+
+.exam-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-5);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--sheet-rule);
+  flex-wrap: wrap;
+}
+.exam-controls .spacer { flex: 1 1 auto; }
+
+.btn.on-sheet {
+  --btn-bg: #fff;
+  --btn-bd: var(--sheet-rule);
+  --btn-fg: var(--graphite);
+  box-shadow: 0 1px 2px rgb(26 28 31 / 0.06);
+}
+.btn.on-sheet:hover:not(:disabled) { --btn-bg: var(--sheet-2); --btn-bd: #9c9482; }
+.btn.on-sheet.primary {
+  --btn-bg: #1b6b7e;
+  --btn-bd: #1b6b7e;
+  --btn-fg: #fff;
+}
+.btn.on-sheet.primary:hover:not(:disabled) { --btn-bg: #175f6f; }
+.btn.on-sheet.flagged { --btn-bg: #fdf3d9; --btn-bd: #d9b451; --btn-fg: #7a5c05; }
+
+/* The dive trigger. It sits below the register rather than beside it, so the
+   sheet keeps its reading order and the gesture is still one click away. */
+.sheet-focus { display: flex; margin-top: var(--s-4); }
+.sheet-focus-btn { flex: 1 1 auto; --btn-h: 48px; font-size: var(--t-md); font-weight: 700; }
+
+/* The optional-section choice. Not a button — a decision, so it reads as one. */
+.choose-box {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 13px;
+  margin-top: var(--s-4);
+  border: 1px dashed var(--sheet-rule);
+  border-radius: var(--r-md);
+  background: var(--sheet-2);
+  flex-wrap: wrap;
+}
+.choose-box[data-chosen='true'] { border-style: solid; border-color: #1b6b7e; background: #eaf6f8; }
+.choose-box-text { flex: 1 1 200px; min-width: 0; font-size: var(--t-sm); line-height: 1.45; color: var(--graphite-2); }
+.choose-box[data-chosen='true'] .choose-box-text { color: #14525f; }
+
+/* Autosave state. Quiet by design — a candidate should never be hunting for
+   a reassurance that their answers are safe. */
+.savestate {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  color: var(--ink-3);
+}
+.savestate .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--jade); }
+.savestate[data-state='saving'] .dot { background: var(--brass); }
+.savestate[data-state='offline'] { color: var(--vermilion); }
+.savestate[data-state='offline'] .dot { background: var(--vermilion); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Result & review
+   ───────────────────────────────────────────────────────────────────────── */
+
+.verdict {
+  display: grid;
+  gap: var(--s-5);
+  padding: var(--s-7) var(--s-6);
+  text-align: center;
+  justify-items: center;
+}
+.verdict-mark {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+}
+.verdict-mark svg { width: 28px; height: 28px; }
+.verdict-mark.pass { color: var(--jade); background: var(--jade-soft); }
+.verdict-mark.fail { color: var(--vermilion); background: var(--vermilion-soft); }
+.verdict h1 { font-size: var(--t-2xl); }
+.verdict-score {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.05em;
+}
+.verdict-score b { font-size: 3.4rem; font-weight: 600; line-height: 1; }
+.verdict-score span { font-size: var(--t-lg); color: var(--ink-3); }
+.verdict-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 1px;
+  width: 100%;
+  max-width: 520px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.verdict-stats > div { display: grid; gap: 2px; padding: 12px; background: var(--desk); }
+.verdict-stats b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--t-lg); font-weight: 600; line-height: 1; }
+.verdict-stats span { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+
+.review-item { padding: var(--s-5) 0; border-bottom: 1px solid var(--rule); }
+.review-item:last-child { border-bottom: none; }
+.review-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-3); margin-bottom: 11px; }
+.review-note {
+  display: flex;
+  gap: 9px;
+  margin-top: 11px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--rule-hi);
+  background: var(--slab);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  font-size: var(--t-sm);
+  line-height: var(--lh);
+  color: var(--ink-2);
+}
+.review-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--ink-3); }
+
+.result-documents { margin-top: 22px; }
+.result-doc-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.result-doc-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.result-doc-tabs [aria-pressed="true"] { border-color: var(--brass); color: var(--ink); }
+.result-doc-preview { overflow: auto; padding: 18px; background: var(--hall); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.result-print-sheet { box-sizing: border-box; width: min(100%, 794px); min-height: 1123px; margin: 0 auto; padding: 44px; background: #fff; color: #1f2328; border: 1px solid #d8d8d8; box-shadow: var(--sh-3); font-family: var(--font-serif); font-size: 14px; line-height: 1.5; }
+.result-paper-head { padding-bottom: 16px; margin-bottom: 20px; border-bottom: 2px solid #252525; }
+.result-school { margin: 0; color: #776329; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.result-paper-head h2, .certificate-inner h2 { margin: 8px 0 4px; color: #202124; font-family: var(--font-display); font-size: 25px; }
+.result-paper-title { margin: 0 0 12px; font-size: 17px; font-weight: 700; }
+.result-paper-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 18px; font-size: 12px; }
+.result-paper-question { padding: 12px 0; border-bottom: 1px solid #d9d9d9; break-inside: avoid; }
+.result-paper-question-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.result-mark { flex: 0 0 auto; font-family: var(--font-mono); font-size: 11px; font-weight: 700; }
+.result-mark.correct, .result-option-note.correct { color: #176b4d; }
+.result-mark.incorrect { color: #a33328; }
+.result-paper-options { margin: 8px 0 0; padding-left: 28px; }
+.result-paper-options li { padding: 2px 4px; }
+.result-paper-options li.student-choice { font-weight: 700; background: #f3f0e6; }
+.result-option-note { margin-left: 8px; color: #725f23; font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.result-paper-figure { display: block; max-width: 100%; max-height: 180px; object-fit: contain; margin: 8px 0; }
+.result-paper-response { margin: 8px 0 0; padding: 9px; border: 1px solid #bbb; }
+.result-paper-foot { margin-top: 22px; padding-top: 8px; border-top: 1px solid #bbb; font-size: 10px; color: #555; }
+.result-print-certificate { display: grid; place-items: center; }
+.result-print-certificate { width: min(100%, 1123px); min-height: 794px; padding: 18px; background: #f4f1e7; }
+.certificate-inner { box-sizing: border-box; position: relative; isolation: isolate; width: 100%; min-height: 758px; padding: 38px 64px 30px; overflow: hidden; border: 1px solid #b69a50; background: #fffdf7; color: #23352f; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.certificate-inner::before { content: ''; position: absolute; z-index: -1; inset: 12px; border: 1px solid #b69a50; box-shadow: inset 0 0 0 5px #fffdf7, inset 0 0 0 6px #ded3b2; pointer-events: none; }
+.certificate-seal { box-sizing: border-box; width: 64px; height: 64px; margin-bottom: 14px; border: 1px solid #b69a50; border-radius: 50%; outline: 1px solid #b69a50; outline-offset: 4px; color: #24463b; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.certificate-seal span { font-family: var(--font-display); font-size: 23px; font-weight: 800; line-height: 1; }
+.certificate-seal small { margin-top: 3px; font-family: var(--font-mono); font-size: 8px; }
+.certificate-inner .result-school { font-size: 13px; }
+.certificate-overline { margin: 22px 0 0; color: #776329; font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.certificate-inner h2 { margin: 9px 0 16px; color: #24463b; font-family: var(--font-display); font-size: 34px; }
+.certificate-intro, .certificate-detail { margin: 4px 0; }
+.certificate-name { width: min(90%, 700px); margin: 8px 0; padding: 0 0 10px; border-bottom: 1px solid #b69a50; color: #202b27; font-family: var(--font-display); font-size: 37px; line-height: 1.15; }
+.certificate-subject { margin: 4px 0 12px; color: #53645c; font-family: var(--font-mono); font-size: 12px; }
+.certificate-outcome { min-width: 230px; margin: 12px 0 10px; padding: 8px 22px; border: 1px solid #b69a50; display: grid; gap: 2px; }
+.certificate-outcome span, .certificate-score div span { color: #776329; font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.certificate-outcome strong { font-family: var(--font-display); font-size: 21px; }
+.certificate-outcome.passed strong { color: #176b4d; }
+.certificate-outcome.not-passed strong { color: #a33328; }
+.certificate-score { width: min(100%, 420px); display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 4px 0 10px; border-top: 1px solid #d3c79f; border-bottom: 1px solid #d3c79f; }
+.certificate-score div { display: grid; gap: 2px; padding: 9px 18px; }
+.certificate-score div + div { border-left: 1px solid #d3c79f; }
+.certificate-score strong { color: #24463b; font-family: var(--font-mono); font-size: 21px; }
+.certificate-id { color: #53645c; font-size: 11px; }
+.certificate-signatures { display: flex; justify-content: space-between; gap: 60px; width: min(100%, 560px); margin-top: 35px; }
+.certificate-signatures span { flex: 1; padding-top: 7px; border-top: 1px solid #68736d; color: #53645c; font-size: 10px; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   A4 print — a candidate can print the paper and sit it on the desk.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@media print {
+  @page { size: A4 portrait; margin: 14mm; }
+  @page result-certificate-page { size: A4 landscape; margin: 10mm; }
+  body { background: #fff; color: #000; }
+  body::before,
+  .rail,
+  .topbar,
+  .hall-bar,
+  .omr,
+  .toast-stack,
+  .no-print { display: none !important; }
+  .hall-body { max-width: none; padding: 0; }
+  .hall-grid { display: block; }
+  .sheet {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    background: #fff;
+  }
+  .sheet::before { display: none; }
+  .sheet-band { break-inside: avoid; }
+  .q-stem { break-inside: avoid; }
+  .q-options { break-inside: avoid; }
+  .a4 { display: block !important; }
+  body[data-print-target^="result-"] * { visibility: hidden !important; }
+  body[data-print-target="result-answers"] .result-print-answer,
+  body[data-print-target="result-answers"] .result-print-answer *,
+  body[data-print-target="result-certificate"] .result-print-certificate,
+  body[data-print-target="result-certificate"] .result-print-certificate * { visibility: visible !important; }
+  body[data-print-target^="result-"] .result-print-sheet { position: fixed; inset: 0 auto auto 0; width: 100%; max-width: none; min-height: 0; margin: 0; padding: 0; border: 0; box-shadow: none; }
+  body[data-print-target="result-certificate"] .result-print-certificate { page: result-certificate-page; }
+  body[data-print-target="result-certificate"] .certificate-inner { min-height: 188mm; padding: 17mm 18mm; }
+  .result-paper-head, .result-paper-meta, .certificate-inner { break-inside: avoid; }
+}
+.a4 { display: none; }
+
+@media screen and (max-width: 680px) {
+  .result-doc-preview { padding: 8px; }
+  .result-print-sheet { min-height: 0; padding: 22px; }
+  .result-paper-meta { grid-template-columns: 1fr; }
+  .result-paper-question-head { flex-direction: column; gap: 4px; }
+  .result-print-certificate { min-height: 0; padding: 8px; }
+  .certificate-inner { min-height: 620px; padding: 24px 18px; }
+  .certificate-name { width: 100%; font-size: 27px; overflow-wrap: anywhere; }
+  .certificate-inner h2 { font-size: 25px; }
+  .certificate-signatures { gap: 24px; }
+}

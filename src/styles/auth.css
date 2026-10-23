@@ -1,0 +1,342 @@
+/* ============================================================================
+   AUTH — the doors.
+
+   The one screen in the product that is allowed to be beautiful, because it
+   is the only one nobody is working inside. It carries the school identity;
+   the app itself carries the work.
+   ========================================================================== */
+
+/* The doors are lit by the scene, and the scene is lit from inside — it is the
+   same room in both themes. So this screen pins its own light-on-dark values
+   rather than following `--ink`, which flips to near-black in the light theme
+   and would leave the words unreadable over the geometry. Scoped to `.auth`,
+   so nothing outside the login screen is affected. */
+/* The room behind this screen is now a LIGHT space — a pale jade for the student
+   portal, pale periwinkle for the teacher portal. The page tokens are pinned
+   here rather than inherited, because the app's own light/dark themes were
+   written for an opaque surface and the scene is always bright: without this
+   the dark theme would put near-white words on a pale green room. */
+.auth {
+  --hall: #f2f6f3;
+  --ink: #0d1512;
+  --ink-2: #3c4a45;
+  --ink-3: #6a7772;
+  --rule: rgb(13 21 18 / 0.12);
+  --rule-hi: rgb(13 21 18 / 0.24);
+  --chalk: #0e7490;
+  --jade: #0f9d6e;
+  --vermilion: #c23c22;
+  --vermilion-soft: rgb(194 60 34 / 0.12);
+  --slab-2: rgb(13 21 18 / 0.08);
+  color-scheme: light;
+}
+
+.auth {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 560px) minmax(320px, 420px);
+  align-items: center;
+  gap: var(--s-10);
+  width: 100%;
+  max-width: none;
+  margin-inline: auto;
+  padding: var(--s-9) var(--s-7);
+  justify-content: center;
+  isolation: isolate;
+  /* The scene layer is the page background, so it must cover the whole page
+     even when the two columns are taller than the viewport — hence `clip`,
+     not `hidden`, which would establish a scroll container and cut it off. */
+  overflow: clip;
+  background: var(--hall);
+}
+
+/* No veil over the room. An earlier pass put a full-screen wash here to help the
+   text read; it also covered the scene in a flat sheet, which is exactly what
+   the scene is not for. Legibility is handled where it belongs — by the text
+   shadows on the words and by the controls' own translucent fills. */
+
+/* ── Left: the school says who it is ───────────────────────────────────── */
+
+.auth-story {
+  display: grid;
+  gap: var(--s-6);
+  align-content: center;
+  text-shadow: 0 2px 18px color-mix(in srgb, var(--hall) 88%, transparent), 0 0 40px color-mix(in srgb, var(--hall) 60%, transparent);
+}
+.auth-school {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.auth-headline {
+  font-size: clamp(2.2rem, 5.2vw, 3.6rem);
+  font-variation-settings: 'wdth' 88;
+  line-height: 0.98;
+  letter-spacing: -0.038em;
+}
+.auth-headline em {
+  font-style: normal;
+  color: var(--chalk);
+  display: inline-block;
+}
+.auth-lede {
+  max-width: 46ch;
+  font-size: var(--t-md);
+  line-height: var(--lh-loose);
+  color: var(--ink-2);
+}
+
+/* The pipeline, drawn as the five steps a paper actually travels. This is a
+   literal account of the product, not decoration. */
+.auth-flow { display: grid; gap: 0; }
+.auth-flow-step {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: var(--s-3);
+  align-items: start;
+  padding-bottom: var(--s-4);
+  position: relative;
+}
+.auth-flow-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 12.5px;
+  top: 26px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--rule);
+}
+.auth-flow-n {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--rule-hi);
+  background: color-mix(in srgb, var(--hall) 74%, transparent);
+  backdrop-filter: blur(6px);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  z-index: 1;
+}
+.auth-flow-t { font-size: var(--t-sm); font-weight: 650; color: var(--ink); line-height: 1.35; }
+.auth-flow-d { font-size: var(--t-xs); color: var(--ink-3); line-height: 1.5; }
+
+.auth-trust {
+  display: flex;
+  gap: var(--s-5);
+  flex-wrap: wrap;
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--rule);
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+}
+.auth-trust span { display: inline-flex; align-items: center; gap: 6px; }
+.auth-trust svg { width: 13px; height: 13px; color: var(--jade); }
+
+/* ── Right: the form ───────────────────────────────────────────────────── */
+
+/* The form has no panel. It sits directly on the scene: the words and the
+   inputs are the same kind of object, so a box drawn around one of them and
+   not the other was saying "this part is a dialog", which it is not. What
+   keeps the controls readable instead is a soft shadow under each one and the
+   page veil behind them — depth, not a surface. */
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  justify-self: end;
+  display: grid;
+  gap: var(--s-4);
+  align-content: center;
+  text-shadow: 0 2px 14px color-mix(in srgb, var(--hall) 68%, transparent);
+}
+
+/* Inputs, role picks and buttons keep their own fill because a control with a
+   transparent background is not a control — but the fill is the control's, and
+   it is translucent, so the room still shows through. */
+.auth-card .input,
+.auth-card .select {
+  background: color-mix(in srgb, var(--hall) 82%, transparent);
+  backdrop-filter: blur(10px) saturate(1.15);
+  box-shadow: 0 6px 18px -10px color-mix(in srgb, var(--hall) 90%, transparent);
+}
+.auth-card .input:focus,
+.auth-card .select:focus {
+  background: color-mix(in srgb, var(--hall) 92%, transparent);
+}
+.auth-card .btn.primary {
+  box-shadow: 0 10px 26px -12px var(--role);
+}
+
+.auth-role {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+  margin-bottom: var(--s-5);
+}
+.auth-role button {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--rule-hi);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--hall) 62%, transparent);
+  text-align: left;
+  text-shadow: none;
+  backdrop-filter: blur(10px) saturate(1.1);
+  box-shadow: 0 6px 18px -10px color-mix(in srgb, var(--hall) 90%, transparent);
+  transition: border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease);
+}
+.auth-role button:hover { border-color: var(--rule-hi); }
+.auth-role button[aria-pressed='true'] {
+  border-color: var(--role);
+  background: color-mix(in srgb, var(--role) 22%, color-mix(in srgb, var(--hall) 58%, transparent));
+}
+.auth-role-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--t-sm);
+  font-weight: 650;
+  color: var(--ink);
+}
+.auth-role-name svg { width: 15px; height: 15px; color: var(--role); }
+.auth-role-desc { font-size: var(--t-xs); color: var(--ink-3); line-height: 1.45; }
+
+.auth-err {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: var(--s-4);
+  border: 1px solid color-mix(in srgb, var(--vermilion) 40%, transparent);
+  border-radius: var(--r-md);
+  background: var(--vermilion-soft);
+  color: var(--vermilion);
+  font-size: var(--t-sm);
+  font-weight: 550;
+  line-height: var(--lh-snug);
+  animation: shake var(--dur-5) var(--ease);
+}
+.auth-err svg { flex: 0 0 auto; margin-top: 1px; }
+
+.auth-alt {
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--rule);
+  text-align: center;
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+}
+.auth-alt button { color: var(--role); font-weight: 650; }
+.auth-alt button:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+.auth-recovery {
+  margin-top: var(--s-3);
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+  text-align: center;
+}
+.auth-recovery button {
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.auth-recovery button:hover { color: var(--ink); }
+
+/* The password reveal rides in the field's meter slot, so the label row keeps
+   its baseline and the control never lands on top of the input. */
+.auth .field-meter .auth-reveal {
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--ink-3);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.auth .field-meter .auth-reveal:hover { color: var(--ink); }
+.auth .field-meter .auth-reveal[aria-pressed='true'] { color: var(--chalk); }
+
+/* The two content columns sit above the scene layer. `.auth-scene` is absolutely
+   placed, so it is out of the grid flow and neither column has to fight it for
+   a track — which is the whole reason the layout broke before. */
+.auth > .auth-story,
+.auth > .auth-card { position: relative; z-index: 1; }
+
+@media (max-width: 900px) {
+  .auth { grid-template-columns: minmax(0, 620px); gap: var(--s-7); padding: var(--s-6) var(--s-4) var(--s-8); }
+  .auth-card { justify-self: stretch; max-width: none; }
+  .auth-story { gap: var(--s-5); }
+  .auth-flow { display: none; }
+  .auth-trust { display: none; }
+}
+
+/* One column on a phone: the words lead, the form follows. The scene stays
+   behind both, so the page still reads as a room rather than a form on a fill. */
+@media (max-width: 720px) {
+  .auth {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    gap: var(--s-6);
+    padding: var(--s-5) var(--s-4) var(--s-8);
+  }
+  .auth-story { gap: var(--s-4); }
+  .auth-headline { font-size: clamp(1.9rem, 8vw, 2.6rem); }
+  .auth-lede { font-size: var(--t-sm); }
+}
+
+/* The card is a column of content now, so its own entrance can be as plain as
+   the page's — no per-element lift, no blur to reveal. */
+@media (prefers-reduced-motion: reduce) {
+  .auth-card .input,
+  .auth-card .select,
+  .auth-role button { backdrop-filter: none; }
+}
+
+/* ── Full-screen loading, boot and crash states ─────────────────────────── */
+
+.boot {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--s-4);
+  text-align: center;
+  padding: var(--s-6);
+}
+.boot .seal { animation: pencil var(--dur-5) var(--ease-out) both; }
+.boot-title {
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 700;
+  letter-spacing: var(--track-tight);
+}
+.boot-line {
+  width: 148px;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: var(--slab-2);
+  overflow: hidden;
+}
+.boot-line > i {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--chalk);
+  animation: boot-sweep 1.25s var(--ease) infinite;
+}
+@keyframes boot-sweep {
+  0% { translate: -100% 0; }
+  100% { translate: 350% 0; }
+}

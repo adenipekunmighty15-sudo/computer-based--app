@@ -1,0 +1,592 @@
+/* ============================================================================
+   SHELL — the hall itself. Rail, topbar, page frame, command bar, mobile nav.
+   ========================================================================== */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  min-height: 100dvh;
+}
+.app-shell[data-rail='collapsed'] { grid-template-columns: var(--rail-w-collapsed) minmax(0, 1fr); }
+
+/* ── Rail ───────────────────────────────────────────────────────────────── */
+
+.rail {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-rail);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-4) var(--s-3) var(--s-3);
+  background: var(--desk);
+  border-right: 1px solid var(--rule);
+  overflow: hidden;
+}
+
+.rail-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px var(--s-5);
+  min-width: 0;
+}
+.rail-brand-text { min-width: 0; }
+.rail-brand-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: var(--track-tight);
+  color: var(--ink);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rail-brand-scope {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The seal. Gold lives here and nowhere else. */
+.seal {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: var(--r-sm);
+  background: var(--gold-soft);
+  border: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.seal.lg { width: 40px; height: 40px; font-size: var(--t-lg); border-radius: var(--r-md); }
+
+.rail-group + .rail-group { margin-top: var(--s-4); }
+.rail-group-label {
+  padding: 0 8px 6px;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.rail-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 9px;
+  border-radius: var(--r-md);
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  font-weight: 550;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
+.rail-item:hover { background: var(--slab-2); color: var(--ink); }
+.rail-item svg { flex: 0 0 auto; width: 16px; height: 16px; }
+
+/* The settings row is a <button> among <a> rows. A bare button carries UA
+   chrome — its own border, background, padding box and font — that would make
+   one row in the rail visibly heavier than its neighbours. */
+button.rail-item {
+  width: 100%;
+  border: 0;
+  background: none;
+  /* Deliberately not the `font` shorthand: it would carry font-size: inherit,
+     and at specificity 0,1,1 that beats `.rail-item`'s font-size, leaving this
+     row a step larger than the links above it. Listing the pieces keeps the
+     size coming from .rail-item where it belongs. */
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.rail-item .rail-badge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  color: var(--ink-3);
+  background: var(--slab-2);
+  border-radius: var(--r-pill);
+  padding: 1px 6px;
+}
+.rail-item .rail-badge.hot { background: var(--vermilion-soft); color: var(--vermilion); }
+
+/* The active marker is a 2px bar on the rail's inner edge — the same
+   "someone marked this" gesture as a red pen in a mark book. */
+.rail-item[aria-current='page'] {
+  background: var(--role-soft);
+  color: var(--ink);
+  font-weight: 650;
+}
+.rail-item[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--s-3) * -1 + 1px);
+  top: 50%;
+  translate: 0 -50%;
+  width: 2px;
+  height: 17px;
+  border-radius: var(--r-pill);
+  background: var(--role);
+  box-shadow: 0 0 9px var(--role-line);
+}
+
+.rail-foot {
+  margin-top: auto;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule);
+  display: grid;
+  gap: 3px;
+}
+
+.rail-account {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: var(--r-md);
+  text-align: left;
+  transition: background var(--dur-2) var(--ease);
+}
+.rail-account:hover { background: var(--slab-2); }
+.rail-account-text { min-width: 0; }
+.rail-account-name {
+  display: block;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rail-account-role {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  color: var(--ink-3);
+}
+
+/* Sign out sits beside the account row rather than under it: it is the one rail
+   action that leaves, so it gets its own affordance and its own hover. */
+.rail-signout {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: var(--r-md);
+  color: var(--ink-3);
+  transition: background var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
+.rail-signout:hover { background: var(--slab-2); color: var(--vermilion); }
+.rail-signout svg { flex: 0 0 auto; }
+.rail-signout span {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-rail='collapsed'] .rail-signout span { display: none; }
+[data-rail='collapsed'] .rail-signout { justify-content: center; padding: 7px 0; }
+[data-rail='collapsed'] .rail-signout .tip-body { display: block; }
+
+@media (max-width: 900px) {
+  .app-shell[data-rail='collapsed'] .rail-signout span { display: revert; }
+  .app-shell[data-rail='collapsed'] .rail-signout { justify-content: flex-start; padding: 7px 8px; }
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--role-soft);
+  border: 1px solid var(--role-line);
+  color: var(--role);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.avatar.lg { width: 36px; height: 36px; font-size: var(--t-sm); }
+.avatar.brass { background: var(--brass-soft); border-color: color-mix(in srgb, var(--brass) 45%, transparent); color: var(--brass); }
+
+/* Collapsed rail: icons only, tooltip on hover. */
+[data-rail='collapsed'] .rail-brand-text,
+[data-rail='collapsed'] .rail-item span,
+[data-rail='collapsed'] .rail-item .rail-badge,
+[data-rail='collapsed'] .rail-group-label,
+[data-rail='collapsed'] .rail-account-text {
+  display: none;
+}
+[data-rail='collapsed'] .rail-item { justify-content: center; padding: 9px 0; }
+[data-rail='collapsed'] .rail-brand { justify-content: center; padding: 4px 0 var(--s-5); }
+[data-rail='collapsed'] .rail-account { justify-content: center; padding: 7px 0; }
+[data-rail='collapsed'] .rail-item .tip-body { display: block; }
+
+/* ── Main column ───────────────────────────────────────────────────────── */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100dvh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  height: var(--topbar-h);
+  padding: 0 var(--pad-page);
+  background: color-mix(in srgb, var(--hall) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(1.3);
+  border-bottom: 1px solid var(--rule);
+}
+.topbar-trail {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.topbar-trail a,
+.topbar-trail span {
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.topbar-trail a:hover { color: var(--ink); }
+.topbar-trail .sep { color: var(--rule-hi); }
+.topbar-trail .here { color: var(--ink); font-weight: 600; }
+.topbar-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+
+/* The rail is always reachable on a phone, so its toggle only exists below the
+   breakpoint where the rail itself collapses into a drawer. */
+.rail-toggle { display: none; }
+
+.topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(300px, 34vw);
+  height: var(--control-h-sm);
+  padding: 0 9px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--desk);
+  color: var(--ink-3);
+  font-size: var(--t-sm);
+  transition: border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease);
+}
+.topbar-search:hover { border-color: var(--rule-hi); background: var(--slab); }
+.topbar-search svg { flex: 0 0 auto; }
+.topbar-search .grow { text-align: left; }
+.topbar-search kbd { flex: 0 0 auto; }
+
+/* Scope chip — where you are and as whom. Always visible, always first. */
+.scope-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: var(--control-h-sm);
+  padding: 0 9px;
+  border: 1px solid var(--role-line);
+  border-radius: var(--r-md);
+  background: var(--role-soft);
+  color: var(--ink);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.scope-chip .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--role);
+  box-shadow: 0 0 0 3px var(--role-soft);
+}
+.scope-chip.brass { border-color: color-mix(in srgb, var(--brass) 45%, transparent); background: var(--brass-soft); }
+.scope-chip.brass .dot { background: var(--brass); box-shadow: 0 0 0 3px var(--brass-soft); }
+
+/* Notification bell with an unread count. */
+.bell { position: relative; }
+.bell-count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: var(--r-pill);
+  background: var(--vermilion);
+  color: var(--vermilion-ink);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 14px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--hall);
+}
+
+/* ── Page frame ────────────────────────────────────────────────────────── */
+
+.page {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: var(--s-7) var(--pad-page) var(--s-11);
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-6);
+}
+.page-head h1 {
+  font-size: var(--t-2xl);
+  font-variation-settings: 'wdth' 92;
+}
+.page-head .sub { margin-top: 5px; font-size: var(--t-base); }
+.page-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+/* Progress hairline. Only for flows that are a process rather than a place —
+   the AI Lab building a paper, a candidate working through one. It sits on the
+   baseline of the head, so it reads as part of the title rather than a bar
+   somebody added. */
+.page-head { position: relative; }
+.head-progress {
+  position: absolute;
+  inset: auto 0 -1px 0;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: var(--rule);
+  overflow: hidden;
+}
+.head-progress > i {
+  display: block;
+  height: 100%;
+  background: var(--role);
+  transition: width var(--dur-4) var(--ease-out);
+}
+
+/* Section heading inside a page — the eyebrow + title + optional action. */
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-4);
+}
+.section-head h2 { font-size: var(--t-lg); }
+.section-head .sub { font-size: var(--t-sm); margin-top: 3px; }
+
+/* ── Command bar (⌘K) ──────────────────────────────────────────────────── */
+
+.palette-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-palette);
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  padding: 12vh var(--s-4) var(--s-4);
+  background: rgb(4 6 8 / 0.7);
+  backdrop-filter: blur(3px);
+  animation: fade var(--dur-2) var(--ease) both;
+}
+.palette {
+  width: min(100%, 620px);
+  max-height: 70dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--rule-hi);
+  border-radius: var(--r-xl);
+  background: var(--desk);
+  box-shadow: var(--sh-4);
+  animation: pop var(--dur-3) var(--ease-out) both;
+}
+.palette-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px var(--s-4);
+  border-bottom: 1px solid var(--rule);
+  flex: 0 0 auto;
+}
+.palette-input-row svg { color: var(--ink-3); flex: 0 0 auto; }
+.palette-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: none;
+  border: none;
+  font-size: var(--t-md);
+  color: var(--ink);
+}
+.palette-input:focus { outline: none; }
+.palette-input::placeholder { color: var(--ink-3); }
+.palette-list { overflow-y: auto; padding: 5px; }
+.palette-group-label {
+  padding: 9px 10px 5px;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.palette-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: var(--r-md);
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  text-align: left;
+  text-decoration: none;
+  scroll-margin: 8px;
+}
+.palette-item svg { flex: 0 0 auto; width: 15px; height: 15px; color: var(--ink-3); }
+.palette-item[aria-selected='true'] { background: var(--role-soft); color: var(--ink); }
+.palette-item[aria-selected='true'] svg { color: var(--role); }
+.palette-item .grow { color: inherit; }
+.palette-item .palette-hint { color: var(--ink-3); font-size: var(--t-xs); }
+.palette-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: 9px var(--s-4);
+  border-top: 1px solid var(--rule);
+  background: var(--hall);
+  font-size: var(--t-2xs);
+  color: var(--ink-3);
+  flex: 0 0 auto;
+}
+.palette-foot span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* ── Mobile navigation ─────────────────────────────────────────────────── */
+
+.rail-scrim { display: none; }
+.mobile-bar { display: none; }
+.tabbar { display: none; }
+
+@media (max-width: 1024px) {
+  .app-shell,
+  .app-shell[data-rail='collapsed'] { grid-template-columns: minmax(0, 1fr); }
+
+  .rail {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 272px;
+    translate: -100% 0;
+    transition: translate var(--dur-4) var(--ease-out);
+    box-shadow: var(--sh-4);
+    z-index: calc(var(--z-drawer) + 5);
+  }
+  .app-shell[data-drawer='open'] .rail { translate: 0 0; }
+  .app-shell[data-drawer='open'] .rail-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-drawer) + 4);
+    background: rgb(4 6 8 / 0.6);
+    animation: fade var(--dur-2) var(--ease) both;
+  }
+  .app-shell[data-drawer='open'] { overflow: hidden; }
+
+  /* On a phone the rail is a full menu, so it keeps its labels regardless of
+     the collapsed preference. */
+  .app-shell[data-rail='collapsed'] .rail-brand-text,
+  .app-shell[data-rail='collapsed'] .rail-item span,
+  .app-shell[data-rail='collapsed'] .rail-item .rail-badge,
+  .app-shell[data-rail='collapsed'] .rail-group-label,
+  .app-shell[data-rail='collapsed'] .rail-account-text { display: revert; }
+  .app-shell[data-rail='collapsed'] .rail-item { justify-content: flex-start; padding: 8px 9px; }
+  .app-shell[data-rail='collapsed'] .rail-brand { justify-content: flex-start; padding: 4px 6px var(--s-5); }
+  .app-shell[data-rail='collapsed'] .rail-account { justify-content: flex-start; padding: 7px 8px; }
+
+  .topbar { padding: 0 var(--s-4); }
+  .topbar-search { display: none; }
+  .rail-toggle { display: grid; }
+  .page { padding: var(--s-5) var(--s-4) 96px; }
+  .page-head h1 { font-size: var(--t-xl); }
+
+  .mobile-bar { display: flex; }
+}
+
+@media (max-width: 720px) {
+  /* Bottom tab bar: the four things a person does most, thumb-reachable. */
+  .tabbar {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: var(--z-sticky);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 2px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--desk) 94%, transparent);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border-top: 1px solid var(--rule);
+  }
+  .tabbar a,
+  .tabbar button {
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    padding: 6px 2px;
+    border-radius: var(--r-md);
+    color: var(--ink-3);
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+  }
+  .tabbar a[aria-current='page'] { color: var(--role); background: var(--role-soft); }
+  .tabbar a svg { width: 18px; height: 18px; }
+}

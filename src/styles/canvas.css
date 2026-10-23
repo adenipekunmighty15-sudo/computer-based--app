@@ -1,0 +1,61 @@
+/* ============================================================================
+   CANVAS — the decorative WebGL layer.
+
+   The scene is the room the sign-in doors stand in. It is never interactive
+   and never carries meaning, so it is removed from the accessibility tree and
+   from the tab order, and it is not allowed to intercept a click meant for the
+   form sitting on top of it.
+
+   Two states, one box. `.scene-canvas` is the live render; `.scene-fallback`
+   is what a reader gets when motion is reduced, the connection is on a data
+   saver, or the browser has no WebGL — a still gradient in the same place, so
+   the layout never shifts when the scene declines to run.
+   ========================================================================== */
+
+/* The layer that owns the whole screen. It exists as its own element because
+   react-three-fiber sets an inline `position: relative` on the element it
+   renders — inline styles beat the stylesheet, so a rule on `.scene-canvas`
+   alone cannot take the scene out of the flow. Positioning the parent is the
+   only place that survives. */
+.auth-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Fill the layer. `!important` is the honest form of the comment above: these
+   two declarations exist to override an inline style the renderer owns. */
+.scene-canvas,
+.scene-fallback {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.scene-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* The fallback stands in for the lit room: the same cool key light the scene
+   uses, flattened to a gradient so it costs nothing and never moves. Built from
+   the same tokens as everything else, so it follows the light and dark themes
+   and the high-contrast setting without a second set of values. */
+.scene-fallback {
+  background:
+    radial-gradient(58% 46% at 32% 34%, var(--chalk-soft), transparent 68%),
+    radial-gradient(44% 40% at 74% 72%, var(--gold-soft), transparent 70%),
+    var(--hall);
+}
+
+[data-contrast='high'] .scene-fallback {
+  background:
+    radial-gradient(58% 46% at 32% 34%, var(--chalk-line), transparent 68%),
+    var(--hall);
+}

@@ -1,0 +1,355 @@
+/* ============================================================================
+   BASE — reset, document, typography, focus, scrollbars, utilities.
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-gutter: stable;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--hall);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--t-base);
+  line-height: var(--lh);
+  font-feature-settings: 'cv05' 1, 'ss03' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+
+/* The hall has a very faint light gradient from the top-left — a desk lamp
+   off-frame. It gives the dark canvas a direction without being a "background". */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(120% 80% at 8% -10%, rgb(92 200 224 / 0.055), transparent 58%),
+    radial-gradient(90% 70% at 100% 0%, rgb(201 162 39 / 0.035), transparent 60%);
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  isolation: isolate;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track-display);
+  font-variation-settings: 'wdth' 100;
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--t-2xl); }
+h2 { font-size: var(--t-xl); }
+h3 { font-size: var(--t-lg); }
+
+p { text-wrap: pretty; }
+
+a {
+  color: var(--role);
+  text-decoration-color: var(--role-line);
+  text-underline-offset: 3px;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: var(--s-5) 0;
+}
+
+::selection {
+  background: var(--role-soft);
+  color: var(--ink);
+}
+
+/* ── Focus ────────────────────────────────────────────────────────────────
+   One ring, everywhere, always visible on keyboard. Never removed, only
+   restyled for mouse users via :focus-visible. */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--role);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+[data-surface='sheet'] :focus-visible {
+  outline-color: var(--chalk-deep);
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--role);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--s-3);
+  top: -100px;
+  z-index: var(--z-palette);
+  padding: 10px 16px;
+  border-radius: var(--r-md);
+  background: var(--role);
+  color: var(--role-ink);
+  font-weight: 700;
+  font-size: var(--t-sm);
+  transition: top var(--dur-2) var(--ease-out);
+}
+.skip-link:focus-visible {
+  top: var(--s-3);
+  outline-color: var(--ink);
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-hi) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--rule-hi);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--r-pill);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-3);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ── Screen-reader only ─────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Shared text roles ───────────────────────────────────────────────────── */
+
+/* The eyebrow. Every panel, KPI and section uses the same one so the app has
+   a consistent voice: small mono caps, letterspaced, quiet. */
+.kicker {
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.muted {
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.sub {
+  color: var(--ink-2);
+  font-size: var(--t-md);
+  line-height: var(--lh-snug);
+  max-width: 68ch;
+  margin: 0;
+}
+
+.hint {
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  line-height: var(--lh);
+  margin: 0;
+}
+
+/* One line under the settings tabs saying what the rest of the dialog does.
+   "Reading" and "Motion" are short words for two large sets of preferences,
+   and this is where the scope gets stated in words instead of implied by the
+   controls below. */
+.settings-scope {
+  margin: 0 0 var(--s-4);
+  color: var(--ink-3);
+  font-size: var(--t-sm);
+  line-height: var(--lh);
+  max-width: 62ch;
+}
+
+.error {
+  color: var(--vermilion);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Every number in the product. Tabular, mono, so columns line up and a
+   teacher can scan a mark sheet vertically. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+  letter-spacing: -0.02em;
+}
+
+.num-lg {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-3xl);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+/* ── Layout primitives ───────────────────────────────────────────────────── */
+
+/* The vertical rhythm of a page. One class instead of a margin on every
+   section, so the spacing of a screen is decided in one place — and so a new
+   page inherits the same cadence instead of inventing its own. */
+.stack { display: flex; flex-direction: column; gap: var(--s-5); }
+.stack > * { min-width: 0; }
+.stack.tight { gap: var(--s-3); }
+.stack.loose { gap: var(--s-6); }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+/* A form's submit row: the action sits right, alone, so it never reads as one
+   of several competing choices. */
+.row-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.wrap { flex-wrap: wrap; }
+.grow { flex: 1 1 auto; min-width: 0; }
+
+/* Inline flex, for a one-off row of controls that is not the page's rhythm.
+   The gap is always set at the call site, so nothing here fights the caller. */
+.flex { display: flex; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s-4); }
+.right { text-align: right; }
+.center { text-align: center; }
+.nowrap { white-space: nowrap; }
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.stack > * + * { margin-top: var(--s-4); }
+.stack-sm > * + * { margin-top: var(--s-2); }
+.stack-lg > * + * { margin-top: var(--s-7); }
+
+@media (max-width: 1080px) {
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .grid-2,
+  .grid-3,
+  .grid-4 { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Hairline stack: the app's default grouping device instead of nested boxes. */
+.hairline-top { border-top: 1px solid var(--rule); }
+.hairline-bottom { border-bottom: 1px solid var(--rule); }

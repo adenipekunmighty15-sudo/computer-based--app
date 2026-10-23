@@ -1,0 +1,177 @@
+{
+  "generatedAt": "2026-10-06T15:44:11.941Z",
+  "winners": [
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "provider": "nvidia",
+      "key": "NVIDIA_ULTRA_KEY",
+      "label": "ULTRA/Nemotron3Super",
+      "ok": true,
+      "ms": 10503,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "provider": "nvidia",
+      "key": "AI_LAB_KEY_1",
+      "label": "Lab1/Nem3Super",
+      "ok": true,
+      "ms": 12152,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "provider": "nvidia",
+      "key": "NVIDIA_ULTRA_KEY_2",
+      "label": "ULTRA2/Nem3Super",
+      "ok": true,
+      "ms": 12285,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    },
+    {
+      "model": "meta/llama-3.2-11b-vision-instruct",
+      "provider": "nvidia",
+      "key": "AI_LAB_KEY_5",
+      "label": "Lab5/Llama11B",
+      "ok": true,
+      "ms": 14817,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "provider": "nvidia",
+      "key": "AI_LAB_KEY_2",
+      "label": "Lab2/Nem3Super",
+      "ok": true,
+      "ms": 16264,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    }
+  ],
+  "all": [
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "provider": "nvidia",
+      "key": "NVIDIA_ULTRA_KEY",
+      "label": "ULTRA/Nemotron3Super",
+      "ok": true,
+      "ms": 10503,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "provider": "nvidia",
+      "key": "AI_LAB_KEY_1",
+      "label": "Lab1/Nem3Super",
+      "ok": true,
+      "ms": 12152,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "provider": "nvidia",
+      "key": "NVIDIA_ULTRA_KEY_2",
+      "label": "ULTRA2/Nem3Super",
+      "ok": true,
+      "ms": 12285,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    },
+    {
+      "model": "meta/llama-3.2-11b-vision-instruct",
+      "provider": "nvidia",
+      "key": "AI_LAB_KEY_5",
+      "label": "Lab5/Llama11B",
+      "ok": true,
+      "ms": 14817,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "provider": "nvidia",
+      "key": "AI_LAB_KEY_2",
+      "label": "Lab2/Nem3Super",
+      "ok": true,
+      "ms": 16264,
+      "status": 200,
+      "questions": 3,
+      "detail": "x3"
+    },
+    {
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "provider": "nvidia",
+      "key": "AI_LAB_KEY_3",
+      "label": "Lab3/Nem3Ultra",
+      "ok": false,
+      "ms": 791,
+      "status": 503,
+      "detail": "{\"error\":{\"message\":\"Service temporarily overloaded\",\"type\":\"Service Unavailable\",\"code\":503}}"
+    },
+    {
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "provider": "nvidia",
+      "key": "AI_LAB_KEY_6",
+      "label": "Lab6/NanoOmni",
+      "ok": false,
+      "ms": 864,
+      "status": 503,
+      "detail": "{\"error\":{\"message\":\"ResourceExhausted: Worker local total request limit reached (16/16)\",\"type\":\"Service Unavailable\",\""
+    },
+    {
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "provider": "nvidia",
+      "key": "NVIDIA_NANO_KEY",
+      "label": "NANO/NanoOmni30B",
+      "ok": false,
+      "ms": 1162,
+      "status": 503,
+      "detail": "{\"error\":{\"message\":\"ResourceExhausted: Worker local total request limit reached (16/16)\",\"type\":\"Service Unavailable\",\""
+    },
+    {
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "provider": "nvidia",
+      "key": "NVIDIA_ULTRA_KEY",
+      "label": "ULTRA/NanoOmni30B",
+      "ok": false,
+      "ms": 2447,
+      "status": 503,
+      "detail": "{\"error\":{\"message\":\"ResourceExhausted: Worker local total request limit reached (16/16)\",\"type\":\"Service Unavailable\",\""
+    },
+    {
+      "model": "openai/gpt-4o-mini",
+      "provider": "openrouter",
+      "key": "OPENROUTER_API_KEY",
+      "label": "OR/GPT4o-mini",
+      "ok": false,
+      "ms": 2542,
+      "status": 402,
+      "detail": "{\"error\":{\"message\":\"Insufficient credits. This account never purchased credits. Make sure your key is on the correct ac"
+    },
+    {
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "provider": "nvidia",
+      "key": "AI_LAB_KEY_4",
+      "label": "Lab4/Nem3Ultra",
+      "ok": false,
+      "ms": 30039,
+      "status": "ERR",
+      "detail": "This operation was aborted"
+    }
+  ]
+}

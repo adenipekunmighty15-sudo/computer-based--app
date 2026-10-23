@@ -1,0 +1,691 @@
+/* ============================================================================
+   DATA — tables, KPIs, filters, bulk bar, pagination.
+
+   The top-down rule the whole app obeys: summary numbers first, then the
+   things that need a decision, then the full record. You should never have to
+   scroll to find out how big the problem is.
+   ========================================================================== */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   KPI cards
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* A small orientation layer above the numbers. It gives the home screen a
+   human point of view without competing with the first action below. */
+.workspace-pulse {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 170px;
+  padding: var(--s-7) var(--s-8);
+  overflow: hidden;
+  border: 1px solid var(--role-line);
+  border-radius: var(--r-xl);
+  background:
+    linear-gradient(110deg, color-mix(in srgb, var(--role) 13%, var(--desk)), var(--desk) 62%),
+    var(--desk);
+  box-shadow: var(--sh-3);
+  animation: pulse-arrive var(--dur-5) var(--ease-out) both;
+}
+.workspace-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(120deg, transparent 20%, rgb(255 255 255 / 0.06), transparent 58%);
+  translate: -70% 0;
+  animation: pulse-sheen 1100ms var(--ease-out) 220ms both;
+}
+.workspace-pulse-copy { position: relative; z-index: 1; max-width: 590px; }
+.workspace-pulse h1 {
+  margin-top: 8px;
+  font-size: clamp(1.7rem, 3vw, 2.65rem);
+  letter-spacing: -0.045em;
+}
+.workspace-pulse-copy > p:last-child {
+  margin-top: 10px;
+  color: var(--ink-2);
+  font-size: var(--t-md);
+}
+.teacher-pulse { --pulse-accent: var(--brass); }
+.student-pulse { --pulse-accent: var(--jade); }
+.workspace-pulse-orbit {
+  position: relative;
+  width: 150px;
+  height: 120px;
+  flex: 0 0 auto;
+  margin-right: var(--s-5);
+}
+.orbit-ring {
+  position: absolute;
+  inset: 10px 24px;
+  border: 1px solid color-mix(in srgb, var(--pulse-accent) 60%, transparent);
+  border-radius: 50%;
+  rotate: 28deg;
+}
+.ring-one { transform: scaleX(1.5); }
+.ring-two { transform: scaleY(0.58) rotate(58deg); opacity: 0.65; }
+.orbit-core {
+  position: absolute;
+  top: 43px;
+  left: 61px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--pulse-accent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--pulse-accent) 18%, var(--desk));
+  color: var(--pulse-accent);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--pulse-accent) 30%, transparent);
+}
+.orbit-note {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.note-one { top: 8px; right: 0; }
+.note-two { bottom: 9px; left: 0; }
+.workspace-pulse-stat {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-right: var(--s-3);
+  padding: 10px 14px;
+  border-left: 1px solid var(--role-line);
+}
+.pulse-stat-value {
+  font-family: var(--font-mono);
+  font-size: 3.2rem;
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+  color: var(--jade);
+}
+.pulse-stat-label {
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  line-height: 1.2;
+}
+
+@keyframes pulse-arrive {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-sheen {
+  to { translate: 140% 0; }
+}
+
+@media (max-width: 680px) {
+  .workspace-pulse { min-height: 150px; padding: var(--s-5); }
+  .workspace-pulse h1 { max-width: 12ch; }
+  .workspace-pulse-copy > p:last-child { max-width: 28ch; font-size: var(--t-sm); }
+  .workspace-pulse-orbit { position: absolute; right: -26px; opacity: 0.62; transform: scale(0.82); }
+  .workspace-pulse-stat { position: relative; z-index: 1; margin-left: auto; margin-right: 0; }
+  .pulse-stat-value { font-size: 2.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-pulse, .workspace-pulse::after { animation: none; }
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(212px, 1fr));
+  gap: var(--s-3);
+}
+
+.kpi {
+  position: relative;
+  display: grid;
+  gap: 9px;
+  padding: var(--s-4) var(--s-4) var(--s-4);
+  background: var(--desk);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color var(--dur-2) var(--ease), transform var(--dur-2) var(--ease);
+}
+a.kpi:hover, button.kpi:hover { border-color: var(--rule-hi); transform: translateY(-1px); }
+a.kpi, button.kpi { text-align: left; width: 100%; }
+
+.kpi-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.kpi-label svg { width: 12px; height: 12px; }
+
+.kpi-value {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  color: var(--ink);
+}
+
+/* A tone on the number itself, for the two cases where the figure is the
+   warning: too few, or too many. The label and the foot stay ink — a coloured
+   label reads as a category rather than as a measurement. */
+.kpi-value.kpi-chalk { color: var(--chalk); }
+.kpi-value.kpi-jade { color: var(--jade); }
+.kpi-value.kpi-vermilion { color: var(--vermilion); }
+.kpi-value.kpi-brass { color: var(--brass); }
+.kpi-unit {
+  font-family: var(--font-ui);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: 0;
+}
+.kpi-foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--t-xs);
+  color: var(--ink-2);
+  min-height: 18px;
+}
+.kpi-delta { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono); font-weight: 600; }
+.kpi-delta.up { color: var(--jade); }
+.kpi-delta.down { color: var(--vermilion); }
+.kpi-delta.flat { color: var(--ink-3); }
+
+/* The sparkline is a real chart, not decoration: it is the only place a trend
+   is shown, and it is always accompanied by the number it describes. */
+.kpi-spark { display: block; width: 100%; height: 30px; overflow: visible; }
+.kpi-spark path.line { fill: none; stroke: var(--role); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.kpi-spark path.area { fill: var(--role-soft); stroke: none; }
+.kpi-spark circle { fill: var(--role); }
+.kpi-spark .grid-line { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 3; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Attention strip — the middle band. Only rendered when it has something to
+   say, so a healthy school sees nothing here at all.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.attention {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.attention:empty { display: none; }
+.attention-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px var(--s-4);
+  background: var(--desk);
+  text-decoration: none;
+  color: var(--ink);
+  transition: background var(--dur-2) var(--ease);
+}
+.attention-item:hover { background: var(--slab); }
+/* The strip is a set of links, but it is sometimes rendered as buttons so the
+   whole row is the target. Same look either way. */
+button.attention-item {
+  width: 100%;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.attention-item .att-mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: var(--r-sm);
+}
+.attention-item .att-mark svg { width: 13px; height: 13px; }
+.attention-item.warn .att-mark { background: var(--brass-soft); color: var(--brass); }
+.attention-item.bad .att-mark { background: var(--vermilion-soft); color: var(--vermilion); }
+.attention-item.info .att-mark { background: var(--chalk-soft); color: var(--chalk); }
+.attention-item .grow { min-width: 0; }
+.attention-item .att-title { font-size: var(--t-sm); font-weight: 600; }
+.attention-item .att-body { font-size: var(--t-xs); color: var(--ink-2); }
+.attention-item .att-go { color: var(--ink-3); flex: 0 0 auto; }
+.attention-item:hover .att-go { color: var(--role); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Table toolbar
+   ───────────────────────────────────────────────────────────────────────── */
+
+.tbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  padding: 9px var(--s-3);
+  border-bottom: 1px solid var(--rule);
+  background: var(--desk);
+}
+.tbar-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1 1 230px;
+  min-width: 150px;
+  max-width: 380px;
+  height: var(--control-h-sm);
+  padding: 0 9px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--hall);
+  color: var(--ink-3);
+  transition: border-color var(--dur-2) var(--ease);
+}
+.tbar-search:focus-within { border-color: var(--role); box-shadow: 0 0 0 3px var(--role-soft); }
+.tbar-search > svg { flex: 0 0 auto; }
+.tbar-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: none;
+  border: none;
+  font-size: var(--t-sm);
+  color: var(--ink);
+}
+.tbar-search input:focus { outline: none; }
+.tbar-search input::placeholder { color: var(--ink-3); }
+.tbar-search .clear { color: var(--ink-3); display: grid; place-items: center; }
+.tbar-search .clear:hover { color: var(--ink); }
+.tbar-spacer { flex: 1 1 auto; }
+
+/* Saved filter presets. These are the tabs a power user actually lives in. */
+.presets {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 var(--s-3) 0;
+  border-bottom: 1px solid var(--rule);
+  background: var(--desk);
+}
+.presets::-webkit-scrollbar { display: none; }
+.preset {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 11px 10px;
+  color: var(--ink-2);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.preset::after {
+  content: '';
+  position: absolute;
+  inset: auto 6px -1px 6px;
+  height: 2px;
+  background: var(--role);
+  scale: 0 1;
+  transition: scale var(--dur-3) var(--ease-out);
+}
+.preset:hover { color: var(--ink); }
+.preset[aria-selected='true'] { color: var(--ink); }
+.preset[aria-selected='true']::after { scale: 1 1; }
+.preset .n {
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  color: var(--ink-3);
+}
+
+/* An active filter is removable — you can always see and undo a filter. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 4px 0 8px;
+  border: 1px solid var(--role-line);
+  border-radius: var(--r-pill);
+  background: var(--role-soft);
+  color: var(--ink);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.chip button { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; color: var(--ink-2); }
+.chip button:hover { background: var(--rule-hi); color: var(--ink); }
+.chip-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid var(--rule-hi);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.chip-filter:hover { border-color: var(--ink-3); color: var(--ink); }
+.chip-filter[aria-expanded='true'] { border-color: var(--role); color: var(--ink); background: var(--role-soft); }
+.chip-filter .n { font-family: var(--font-mono); color: var(--ink-3); }
+.chip-filter .caret { transition: rotate var(--dur-2) var(--ease); }
+.chip-filter[aria-expanded='true'] .caret { rotate: 180deg; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   The table
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* The table plus its presets, toolbar and pager read as one object. The page
+   is a stack of these, so the seam has to be visible without a heavy border. */
+.table-shell {
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--desk);
+  overflow: hidden;
+}
+.table-shell:empty { display: none; }
+
+.table-scroll {
+  overflow: auto;
+  max-height: var(--table-max, none);
+  overscroll-behavior-x: contain;
+}
+
+.tbl {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-table);
+  table-layout: fixed;
+}
+
+/* Sticky header. The first two rows of context (header + sub) stay put while
+   200 questions scroll underneath. */
+.tbl thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding: 0;
+  background: var(--slab);
+  border-bottom: 1px solid var(--rule-hi);
+  font-weight: 600;
+  text-align: left;
+  vertical-align: middle;
+}
+.tbl thead th .th {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 var(--cell-px);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+button.th { cursor: pointer; transition: color var(--dur-2) var(--ease), background var(--dur-2) var(--ease); }
+button.th:hover { color: var(--ink); background: var(--slab-2); }
+button.th[aria-sort]:not([aria-sort='none']) { color: var(--role); }
+.th .sort {
+  display: inline-grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  opacity: 0.4;
+  transition: opacity var(--dur-2) var(--ease);
+}
+button.th:hover .sort { opacity: 0.8; }
+button.th[aria-sort='ascending'] .sort,
+button.th[aria-sort='descending'] .sort { opacity: 1; }
+.th .sort.asc { rotate: 180deg; }
+.th.num-col { justify-content: flex-end; }
+
+.tbl tbody td {
+  padding: var(--row-py) var(--cell-px);
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+  color: var(--ink-2);
+}
+.tbl tbody tr { transition: background var(--dur-1) var(--ease); }
+.tbl tbody tr:hover td { background: var(--slab); }
+.tbl tbody tr[aria-selected='true'] td { background: var(--role-soft); }
+.tbl tbody tr[aria-selected='true'] td:first-child { box-shadow: inset 2px 0 0 var(--role); }
+.tbl tbody tr.clickable { cursor: pointer; }
+
+/* Pinned columns. The identity of a row never leaves the left edge, and the
+   action for a row never leaves the right edge, however wide the middle gets. */
+.tbl .pin-l {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--desk);
+}
+.tbl thead .pin-l { z-index: 4; background: var(--slab); }
+.tbl tbody tr:hover .pin-l { background: color-mix(in srgb, var(--slab) 92%, var(--desk)); }
+.tbl tbody tr[aria-selected='true'] .pin-l { background: color-mix(in srgb, var(--role-soft) 60%, var(--desk)); }
+
+.tbl .pin-r {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background: var(--desk);
+  box-shadow: -8px 0 12px -10px rgb(0 0 0 / 0.8);
+}
+.tbl thead .pin-r { z-index: 4; background: var(--slab); box-shadow: none; }
+.tbl tbody tr:hover .pin-r { background: color-mix(in srgb, var(--slab) 92%, var(--desk)); }
+.tbl tbody tr[aria-selected='true'] .pin-r { background: color-mix(in srgb, var(--role-soft) 60%, var(--desk)); }
+
+/* Row actions live in the pinned right cell and stay out of the way until
+   the row is hovered or focused — no wall of buttons in a 200-row table. */
+.cell-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+.cell-mark {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  min-width: 0;
+}
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease);
+}
+tr:hover .row-actions,
+tr:focus-within .row-actions,
+.row-actions:focus-within,
+.row-actions[data-always='true'] { opacity: 1; }
+@media (hover: none) {
+  .row-actions { opacity: 1; }
+}
+
+/* The column picker anchors to its button, so the menu can never open under
+   the cursor. `contain` keeps it from being clipped by the scroll area. */
+.colpicker { position: relative; flex: 0 0 auto; }
+.colpicker .popover { top: calc(100% + 6px); }
+.colpicker .menu-item[disabled] { opacity: 0.55; cursor: default; }
+.colpicker .menu-item[disabled]:hover { background: none; color: var(--ink-2); }
+
+.cell-strong { color: var(--ink); font-weight: 600; }
+.cell-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.cell-wrap { white-space: normal; }
+.cell-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cell-sub { font-size: var(--t-xs); color: var(--ink-3); }
+
+.tbl tbody tr.row-flash td { animation: flash var(--dur-5) var(--ease) both; }
+
+.tbl-foot-note {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 9px var(--s-4);
+  border-top: 1px solid var(--rule);
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+  flex-wrap: wrap;
+}
+
+/* ── Pagination ────────────────────────────────────────────────────────── */
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 10px var(--s-4);
+  border-top: 1px solid var(--rule);
+  background: var(--desk);
+  flex-wrap: wrap;
+}
+.pager-pages { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.pager-pages button {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 7px;
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.pager-pages button:hover:not(:disabled) { background: var(--slab-2); color: var(--ink); }
+.pager-pages button[aria-current='page'] { background: var(--role); color: var(--role-ink); }
+.pager-pages button:disabled { opacity: 0.35; cursor: not-allowed; }
+.pager-gap { color: var(--ink-3); padding: 0 2px; }
+.pager-total { font-family: var(--font-mono); font-size: var(--t-xs); color: var(--ink-3); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Floating bulk action bar. Appears only when a selection exists, so the
+   screen is never cluttered with actions you cannot use.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.bulkbar {
+  position: fixed;
+  z-index: var(--z-sticky);
+  left: 50%;
+  bottom: var(--s-5);
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 8px 8px 8px var(--s-4);
+  border: 1px solid var(--rule-hi);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--slab) 92%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: var(--sh-4);
+  animation: bulk-in var(--dur-4) var(--ease-out) both;
+  max-width: calc(100vw - 24px);
+}
+.bulkbar-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.bulkbar-count b { font-size: var(--t-md); }
+/* Selection can span pages, so say how much of it is under the teacher right
+   now — otherwise the bar reads as if fewer rows are queued than there are. */
+.bulkbar-scope {
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.bulkbar-sep { width: 1px; height: 20px; background: var(--rule-hi); flex: 0 0 auto; }
+.bulkbar-actions { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.bulkbar-actions::-webkit-scrollbar { display: none; }
+
+@media (max-width: 720px) {
+  .bulkbar { left: 12px; right: 12px; bottom: 78px; translate: none; border-radius: var(--r-xl); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Simple list rows — for things too small to be a table
+   ───────────────────────────────────────────────────────────────────────── */
+
+.list { display: grid; }
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 11px var(--s-4);
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+  transition: background var(--dur-2) var(--ease);
+}
+.list-row:last-child { border-bottom: none; }
+.list-row:hover { background: var(--slab); }
+.list-row .grow { min-width: 0; }
+.list-row-title { font-size: var(--t-sm); font-weight: 600; }
+.list-row-sub { font-size: var(--t-xs); color: var(--ink-2); }
+
+/* A two-line result card used in the student results list. */
+.result-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-4);
+  background: var(--desk);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color var(--dur-2) var(--ease), transform var(--dur-2) var(--ease);
+}
+.result-card:hover { border-color: var(--rule-hi); transform: translateY(-1px); }
+.result-score {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: 62px;
+}
+.result-score b {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.result-score span { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }

@@ -378,7 +378,7 @@ export function isBackendDown(err: unknown): boolean {
    login form as an opaque "Request failed (502)", which reads like a wrong
    password and sends people retyping a password that was always correct. */
 const BACKEND_DOWN =
-  'Cannot reach the server. Start it with "npm run dev" (both services) or "npm start", then try again.'
+  'Server is unreachable. If this is a live site, it may be waking up (free tier) or temporarily down. Please refresh in a few seconds.'
 
 async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response

@@ -2427,6 +2427,7 @@ app.use('/api', teacherRouter)
 app.use('/api', studentRouter)
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', t: Date.now() }))
+app.get('/api/ping', (req, res) => res.json({ pong: true, t: Date.now() }))
 
 // ── Serve the built frontend (single process, one port) ──
 const distDir = path.join(__dirname, '..', 'dist')

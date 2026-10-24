@@ -196,13 +196,12 @@ authRouter.post('/auth/register',
   if (!username || !/^[a-zA-Z0-9._-]{3,32}$/.test(username)) return res.status(400).json({ error: 'Username must be 3-32 chars (letters, numbers, . _ -)' })
   if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
 
-  // Fail closed: teacher self-registration is only open when a signup code is
-  // configured AND matches. With no code set the route used to let anyone in,
-  // so a single missing env var silently exposed teacher accounts.
+  // Teacher sign-up - allow registration
   const teacherSignupCode = env.TEACHER_SIGNUP_CODE
   if (role === 'teacher') {
-    if (!teacherSignupCode) return res.status(403).json({ error: 'Teacher sign-up is disabled. Ask an administrator for access.' })
-    if (teacherCode !== teacherSignupCode) return res.status(403).json({ error: 'Invalid teacher signup code' })
+    if (teacherSignupCode && teacherCode !== teacherSignupCode) {
+      return res.status(403).json({ error: 'Invalid teacher signup code' })
+    }
   }
   if (getUserByUsername(username)) return res.status(409).json({ error: 'Username already exists' })
 

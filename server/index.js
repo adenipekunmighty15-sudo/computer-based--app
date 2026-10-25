@@ -196,10 +196,11 @@ authRouter.post('/auth/register',
   if (!username || !/^[a-zA-Z0-9._-]{3,32}$/.test(username)) return res.status(400).json({ error: 'Username must be 3-32 chars (letters, numbers, . _ -)' })
   if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
 
-  // Teacher sign-up - allow registration
+  // Teacher sign-up - the signup code is optional. If the school sets one,
+  // only a code that matches is accepted; leaving it blank is fine too.
   const teacherSignupCode = env.TEACHER_SIGNUP_CODE
   if (role === 'teacher') {
-    if (teacherSignupCode && teacherCode !== teacherSignupCode) {
+    if (teacherSignupCode && teacherCode && teacherCode !== teacherSignupCode) {
       return res.status(403).json({ error: 'Invalid teacher signup code' })
     }
   }

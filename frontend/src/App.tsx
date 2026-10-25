@@ -8,10 +8,8 @@ import { AuthScreen } from './pages/AuthScreen'
 import { LandingPage } from './pages/LandingPage'
 import { TeacherApp } from './pages/TeacherApp'
 import { StudentApp } from './pages/StudentApp'
-import { AIAssistantBubble } from './components/patterns'
 import { navigate } from './lib/router'
 import { ScreenContextProvider } from './lib/context'
-
 function Root() {
   const { user, loading } = useAuth()
 

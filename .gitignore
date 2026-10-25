@@ -13,10 +13,10 @@ dist-ssr
 *.local
 .env
 .env.*
-!server/.env.example
-server/.env
-server/*.db
-server/*.db-*
+!backend/server/.env.example
+backend/server/.env
+backend/server/*.db
+backend/server/*.db-*
 
 # Loose API-key notes (never commit these)
 supabase/migrations/api keys for ai lab

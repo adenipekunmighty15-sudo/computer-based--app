@@ -2431,7 +2431,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', t: Date.now() }))
 app.get('/api/ping', (req, res) => res.json({ pong: true, t: Date.now() }))
 
 // ── Serve the built frontend (single process, one port) ──
-const distDir = path.join(__dirname, '..', 'dist')
+const distDir = path.join(__dirname, '..', '..', 'dist')
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir))
   app.get('*', (req, res, next) => {

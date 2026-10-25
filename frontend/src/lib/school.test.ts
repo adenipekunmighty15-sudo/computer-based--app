@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SUBJECT_CATALOGUE as SERVER_CATALOGUE, SCHOOL_LEVELS as SERVER_LEVELS } from '../../server/school-catalogue.js'
+import { SUBJECT_CATALOGUE as SERVER_CATALOGUE, SCHOOL_LEVELS as SERVER_LEVELS } from '../../../backend/server/school-catalogue.js'
 import { SUBJECT_CATALOGUE as CLIENT_CATALOGUE, SCHOOL_LEVELS as CLIENT_LEVELS } from './school'
 
 /* The picker and the server's allow-list must name the same subjects: the

@@ -43,7 +43,7 @@ const PORTALS = [
 ]
 
 export function LandingPage() {
-  const go = (role: 'student' | 'teacher') => {
+  const go = () => {
     navigate('/login')
   }
 
@@ -66,10 +66,10 @@ export function LandingPage() {
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6a7772' }}>
               T. Gold Brighter Tomorrow · Model School
             </div>
-            <h1 style={{ fontSize: clamp('2rem', '5vw', '3rem'), lineHeight: 1.05, margin: '8px 0 0', letterSpacing: '-0.02em', fontVariationSettings: "'wdth' 95" }}>
+            <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', lineHeight: 1.05, margin: '8px 0 0', letterSpacing: '-0.02em', fontVariationSettings: "'wdth' 95" }}>
               Computer-Based Testing
             </h1>
-            <p style={{ fontSize: clamp('0.95rem', '2vw', '1.1rem'), color: '#3c4a45', marginTop: 10, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', color: '#3c4a45', marginTop: 10, lineHeight: 1.5 }}>
               One calm place for every paper — set it, sit it, mark it, and get the reasoning behind every mark.
             </p>
           </div>
@@ -92,7 +92,7 @@ export function LandingPage() {
             <button
               key={p.role}
               type="button"
-              onClick={() => go(p.role)}
+              onClick={go}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -121,7 +121,7 @@ export function LandingPage() {
 
         <div className="landing-cta" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
           <Button variant="primary" size="lg" block={false} onClick={() => navigate('/login')}>
-            <Icon name="login" size={16} style={{ color: '#ffffff' }} />
+            <Icon name="arrowRight" size={16} style={{ color: '#ffffff' }} />
             <span style={{ marginLeft: 8, fontWeight: 650 }}>Get Started — Sign In</span>
           </Button>
         </div>

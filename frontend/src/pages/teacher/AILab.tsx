@@ -177,7 +177,7 @@ function useEngines(): EngineState {
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : 'Could not reach the AI service')
-        setMissingKeys(['check server/.env'])
+        setMissingKeys(['check backend/server/.env'])
       })
   }, [])
 
@@ -238,7 +238,7 @@ function EngineBar({ engines }: { engines: EngineState }) {
 
       {open && (
         <div className="panel-body ai-engine-grid" style={{ paddingTop: 0 }}>
-          {models.length === 0 && <span className="muted" style={{ fontSize: 12 }}>No engines configured — add keys to server/.env.</span>}
+          {models.length === 0 && <span className="muted" style={{ fontSize: 12 }}>No engines configured — add keys to backend/server/.env.</span>}
           {models.map((m, i) => {
             const ms = m.liveMs ?? m.latencyMs ?? null
             return (
@@ -253,7 +253,7 @@ function EngineBar({ engines }: { engines: EngineState }) {
           })}
           {missingKeys.length > 0 && (
             <span className="muted" style={{ fontSize: 12, flexBasis: '100%' }}>
-              Unset keys: {missingKeys.join(', ')} — add them to server/.env for more engines.
+              Unset keys: {missingKeys.join(', ')} — add them to backend/server/.env for more engines.
             </span>
           )}
         </div>
@@ -355,7 +355,7 @@ function BudgetBar({ budget }: { budget: ReturnType<typeof useAiBudget> }) {
         )}
         {!capped && (
           <p className="hint" style={{ margin: 0 }}>
-            No daily limit is configured. Set <code>AI_DAILY_QUESTION_LIMIT</code> in server/.env to cap spend per teacher.
+            No daily limit is configured. Set <code>AI_DAILY_QUESTION_LIMIT</code> in backend/server/.env to cap spend per teacher.
           </p>
         )}
       </div>
@@ -838,7 +838,7 @@ function QuestionsTab({ budget }: { budget: ReturnType<typeof useAiBudget> }) {
     // The server rejects a run that would blow past the daily cap, but only
     // after the teacher has waited for the engines. Fail fast and say why.
     if (budget.limit > 0 && n > (budget.remaining ?? 0)) {
-      const text = `That asks for ${n} questions but only ${budget.remaining ?? 0} remain in today's budget (cap ${budget.limit}). Lower the count, or raise AI_DAILY_QUESTION_LIMIT in server/.env.`
+      const text = `That asks for ${n} questions but only ${budget.remaining ?? 0} remain in today's budget (cap ${budget.limit}). Lower the count, or raise AI_DAILY_QUESTION_LIMIT in backend/server/.env.`
       setMessage(text)
       notify('error', text)
       return
@@ -1168,7 +1168,7 @@ function PaperTab({ budget }: { budget: ReturnType<typeof useAiBudget> }) {
     // Same fail-fast as the Question Assistant: a paper of 4000 questions that
     // the daily cap will reject should not be built first.
     if (budget.limit > 0 && total > (budget.remaining ?? 0)) {
-      const text = `This paper asks for ${total} questions but only ${budget.remaining ?? 0} remain in today's budget (cap ${budget.limit}). Reduce the section counts, or raise AI_DAILY_QUESTION_LIMIT in server/.env.`
+      const text = `This paper asks for ${total} questions but only ${budget.remaining ?? 0} remain in today's budget (cap ${budget.limit}). Reduce the section counts, or raise AI_DAILY_QUESTION_LIMIT in backend/server/.env.`
       setMessage(text)
       notify('error', text)
       return
@@ -1500,7 +1500,7 @@ function PicturesTab() {
           {imageModels.length === 0 && (
             <p className="hint" style={{ marginBottom: 0 }}>
               No hosted image model is available. Pictures fall back to vector diagrams drawn by the
-              text engines — add an NVIDIA image key to server/.env for photographs.
+              text engines — add an NVIDIA image key to backend/server/.env for photographs.
             </p>
           )}
         </div>

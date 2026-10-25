@@ -4,6 +4,11 @@ import { defineConfig } from 'vitest/config'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Backend (in backend/) serves static files from root/dist so both live
+    // on one origin in production. `..` from frontend/ is the repo root.
+    outDir: '../dist',
+  },
   server: {
     proxy: {
       // A full paper's worth of diagrams runs for many minutes, and http-proxy
@@ -25,6 +30,6 @@ export default defineConfig({
     globals: true,
     // The default forks/threads pool times out booting workers on this checkout path (with spaces).
     pool: 'vmThreads',
-    include: ['src/**/*.test.{ts,tsx}', 'server/**/*.test.mjs'],
+    include: ['src/**/*.test.{ts,tsx}', '../backend/server/**/*.test.mjs'],
   },
 })

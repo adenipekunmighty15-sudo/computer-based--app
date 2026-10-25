@@ -203,20 +203,20 @@ authRouter.post('/auth/register',
       return res.status(403).json({ error: 'Invalid teacher signup code' })
     }
   }
-  if (getUserByUsername(username)) return res.status(409).json({ error: 'Username already exists' })
+  if (await getUserByUsername(username)) return res.status(409).json({ error: 'Username already exists' })
 
   const hash = await hashPassword(password)
   const { insertRawUser } = await import('./db.js')
-  const id = insertRawUser(role, name.trim(), username.trim(), hash, role === 'student' ? (studentId || null) : null, role === 'student' ? (cls || null) : null)
-  const token = createSession(id)
+  const id = await insertRawUser(role, name.trim(), username.trim(), hash, role === 'student' ? (studentId || null) : null, role === 'student' ? (cls || null) : null)
+  const token = await createSession(id)
   res.cookie(SESSION_COOKIE, token, sessionCookieOpts())
   res.status(201).json({ user: { id, role, name: name.trim(), username: username.trim(), student_id: role === 'student' ? studentId : null, class: role === 'student' ? cls : null } })
 }))
 
-authRouter.post('/auth/logout', anyAuth, (req, res) => {
-  logout(getCookie(req, SESSION_COOKIE))
+authRouter.post('/auth/logout', anyAuth, async (req, res) => {
+  await logout(getCookie(req, SESSION_COOKIE))
   const headerToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim()
-  if (headerToken) logout(headerToken)
+  if (headerToken) await logout(headerToken)
   res.clearCookie(SESSION_COOKIE, { path: '/', httpOnly: true, sameSite: 'lax' })
   res.json({ ok: true })
 })
@@ -226,14 +226,14 @@ authRouter.get('/auth/me', anyAuth, (req, res) => res.json({ user: req.user }))
 // The signed-in person's own record. PATCH rather than POST /users/:id because
 // there is no id in the path on purpose: a settings screen must not be able to
 // name a different row, even by accident.
-authRouter.patch('/auth/me', anyAuth, wrap((req, res) => {
+authRouter.patch('/auth/me', anyAuth, wrap(async (req, res) => {
   const { name, studentId, cls } = req.body || {}
   if (name !== undefined && !String(name).trim()) return res.status(400).json({ error: 'Name cannot be empty' })
   if (String(name ?? '').length > 120) return res.status(400).json({ error: 'Name is too long' })
   if (String(cls ?? '').length > 80) return res.status(400).json({ error: 'Class name is too long' })
   if (String(studentId ?? '').length > 40) return res.status(400).json({ error: 'Student ID is too long' })
 
-  const user = updateUserProfile(req.user.id, { name, studentId, cls })
+  const user = await updateUserProfile(req.user.id, { name, studentId, cls })
   if (!user) return res.status(404).json({ error: 'Account not found' })
   res.json({ user })
 }))
@@ -262,7 +262,7 @@ authRouter.post('/auth/password',
 
 // ── Teacher: question bank ──
 teacherRouter.get('/questions', mustBeTeacher, wrap(async (req, res) => {
-  res.json({ questions: listQuestions(req.user.id) })
+  res.json({ questions: await listQuestions(req.user.id) })
 }))
 
 teacherRouter.get('/questions/search', mustBeTeacher, wrap(async (req, res) => {
@@ -275,18 +275,18 @@ teacherRouter.get('/questions/search', mustBeTeacher, wrap(async (req, res) => {
   if (embedderConfigured(env)) {
     const [vector] = await embedQuestions(env, [{ prompt: query }])
     if (vector) {
-      const questions = searchQuestionsByVector(vector, req.user.id)
+      const questions = await searchQuestionsByVector(vector, req.user.id)
       return res.json({ questions, method: 'semantic' })
     }
   }
   
-  const questions = searchQuestionsByText(query, req.user.id)
+  const questions = await searchQuestionsByText(query, req.user.id)
   res.json({ questions, method: 'text' })
 }))
 
 teacherRouter.get('/questions/:id/similar', mustBeTeacher, wrap(async (req, res) => {
   const { id } = req.params
-  const row = getQuestionRow(Number(id))
+  const row = await getQuestionRow(Number(id))
   if (!row) return res.status(404).json({ error: 'Question not found' })
   
   const { searchQuestionsByVector } = await import('./db.js')
@@ -295,7 +295,7 @@ teacherRouter.get('/questions/:id/similar', mustBeTeacher, wrap(async (req, res)
   if (!embedding) return res.json({ questions: [], note: 'No embedding for this question' })
   
   // Exclude the question itself
-  const questions = searchQuestionsByVector(embedding, req.user.id)
+  const questions = await searchQuestionsByVector(embedding, req.user.id)
     .filter(q => q.id !== Number(id))
     
   res.json({ questions })
@@ -320,7 +320,7 @@ teacherRouter.post('/questions', mustBeTeacher, rateLimit({ max: 300, message: '
   // warning is advisory by default rather than a silent drop.
   if (dedupeEnabled(env) && !q.force) {
     const [vector] = await embedQuestions(env, [q])
-    const dupe = findDuplicate({ ...q, embedding: vector }, questionFingerprints(req.user.id))
+    const dupe = findDuplicate({ ...q, embedding: vector }, await questionFingerprints(req.user.id))
     if (dupe) {
       return res.status(409).json({
         error: 'This looks like a question already in the bank',
@@ -330,7 +330,7 @@ teacherRouter.post('/questions', mustBeTeacher, rateLimit({ max: 300, message: '
     }
     q.embedding = vector
   }
-  res.status(201).json({ question: insertQuestion(q, req.user.id) })
+  res.status(201).json({ question: await insertQuestion(q, req.user.id) })
 }))
 
 // One transaction for the whole batch. A 200-question "Save all" used to be a
@@ -350,7 +350,7 @@ teacherRouter.post('/questions/bulk', mustBeTeacher, rateLimit({ max: 30, messag
 
   const checkDupes = dedupeEnabled(env) && !req.body?.force
   const vectors = checkDupes ? await embedQuestions(env, list) : list.map(() => null)
-  const bank = questionFingerprints(req.user.id)
+  const bank = await questionFingerprints(req.user.id)
 
   const fresh = []
   const duplicates = []
@@ -369,7 +369,7 @@ teacherRouter.post('/questions/bulk', mustBeTeacher, rateLimit({ max: 30, messag
   }
 
   if (req.body?.force) {
-    const saved = insertQuestionsBulk(list.map((q, i) => ({ ...q, embedding: vectors[i] })), req.user.id)
+    const saved = await insertQuestionsBulk(list.map((q, i) => ({ ...q, embedding: vectors[i] })), req.user.id)
     return res.status(201).json({ saved: saved.length, questions: saved, duplicates: [] })
   }
   if (duplicates.length && fresh.length === 0) {
@@ -377,7 +377,7 @@ teacherRouter.post('/questions/bulk', mustBeTeacher, rateLimit({ max: 30, messag
   }
   if (!fresh.length) return res.status(400).json({ error: 'Nothing to save' })
 
-  const saved = insertQuestionsBulk(fresh, req.user.id)
+  const saved = await insertQuestionsBulk(fresh, req.user.id)
   logAiSummary(req, 'bulk-save', { count: saved.length, requested: list.length, ok: true, extra: `dupes=${duplicates.length}` })
   res.status(201).json({ saved: saved.length, questions: saved, duplicates })
 }))
@@ -387,7 +387,7 @@ teacherRouter.post('/questions/duplicates', mustBeTeacher, rateLimit({ max: 120 
   const list = Array.isArray(req.body?.questions) ? req.body.questions.slice(0, 50) : []
   if (!list.length || !dedupeEnabled(env)) return res.json({ duplicates: [], method: dedupeEnabled(env) ? 'text' : 'off' })
   const vectors = await embedQuestions(env, list)
-  const bank = questionFingerprints(req.user.id)
+  const bank = await questionFingerprints(req.user.id)
   const seen = []
   const duplicates = []
   for (let i = 0; i < list.length; i += 1) {
@@ -399,68 +399,68 @@ teacherRouter.post('/questions/duplicates', mustBeTeacher, rateLimit({ max: 120 
 }))
 
 teacherRouter.put('/questions/:id', mustBeTeacher, rateLimit({ max: 300 }), wrap(async (req, res) => {
-  const row = getQuestionRow(Number(req.params.id))
+  const row = await getQuestionRow(Number(req.params.id))
   if (!row) return res.status(404).json({ error: 'Question not found' })
-  if (!canEditQuestion(row, req.user.id)) return res.status(403).json({ error: 'You can only edit your own questions' })
+  if (!await canEditQuestion(row, req.user.id)) return res.status(403).json({ error: 'You can only edit your own questions' })
   const q = req.body || {}
   const bad = invalidQuestion(q)
   if (bad) return res.status(400).json({ error: bad })
   // Passing the editor adopts a shared/system question, matching canEditQuestion.
-  res.json({ question: updateQuestion(row.id, q, req.user.id) })
+  res.json({ question: await updateQuestion(row.id, q, req.user.id) })
 }))
 
 teacherRouter.delete('/questions/:id', mustBeTeacher, wrap(async (req, res) => {
-  const row = getQuestionRow(Number(req.params.id))
+  const row = await getQuestionRow(Number(req.params.id))
   if (!row) return res.status(404).json({ error: 'Question not found' })
   // Shared/system questions (no owner) are never deletable by a teacher.
-  if (!questionBelongsTo(row, req.user.id)) return res.status(403).json({ error: 'You can only delete your own questions' })
-  deleteQuestion(row.id)
+  if (!await questionBelongsTo(row, req.user.id)) return res.status(403).json({ error: 'You can only delete your own questions' })
+  await deleteQuestion(row.id)
   res.json({ ok: true })
 }))
 
 // ── Teacher: students + exams ──
 teacherRouter.get('/students', mustBeTeacher, wrap(async (req, res) => {
-  res.json({ students: listStudents() })
+  res.json({ students: await listStudents() })
 }))
 
 teacherRouter.get('/exams', mustBeTeacher, wrap(async (req, res) => {
-  res.json({ exams: listExams() })
+  res.json({ exams: await listExams() })
 }))
 
 teacherRouter.post('/exams', mustBeTeacher, rateLimit({ max: 30 }), wrap(async (req, res) => {
   const exam = req.body || {}
   if (!exam.title || !exam.title.trim()) return res.status(400).json({ error: 'Exam title is required' })
   if (!Array.isArray(exam.questions) || exam.questions.length === 0) return res.status(400).json({ error: 'An exam needs at least one question' })
-  res.status(201).json({ exam: insertExam(exam, req.user.id) })
+  res.status(201).json({ exam: await insertExam(exam, req.user.id) })
 }))
 
 teacherRouter.delete('/exams/:id', mustBeTeacher, wrap(async (req, res) => {
-  const exam = getExam(Number(req.params.id))
+  const exam = await getExam(Number(req.params.id))
   if (!exam) return res.status(404).json({ error: 'Exam not found' })
-  if (!canEditExam(exam, req.user.id)) return res.status(403).json({ error: 'You can only delete exams you created' })
-  deleteExam(exam.id)
+  if (!await canEditExam(exam, req.user.id)) return res.status(403).json({ error: 'You can only delete exams you created' })
+  await deleteExam(exam.id)
   res.json({ ok: true })
 }))
 
 teacherRouter.post('/exams/:id/assign', mustBeTeacher, wrap(async (req, res) => {
   const examId = Number(req.params.id)
-  const exam = getExam(examId)
+  const exam = await getExam(examId)
   if (!exam) return res.status(404).json({ error: 'Exam not found' })
-  if (!canEditExam(exam, req.user.id)) return res.status(403).json({ error: 'You can only assign exams you created' })
+  if (!await canEditExam(exam, req.user.id)) return res.status(403).json({ error: 'You can only assign exams you created' })
   const { studentIds, assignAll } = req.body || {}
   let ids = Array.isArray(studentIds) ? studentIds.map(Number).filter((n) => Number.isInteger(n)) : []
-  if (assignAll) ids = listStudents().map((s) => s.id)
+  if (assignAll) ids = await listStudents().map((s) => s.id)
   if (!ids.length) return res.status(400).json({ error: 'Select at least one student (or assign to all)' })
-  assignExam(examId, ids)
-  res.json({ ok: true, assigned: assignedStudentIds(examId).length })
+  await assignExam(examId, ids)
+  res.json({ ok: true, assigned: await assignedStudentIds(examId).length })
 }))
 
 teacherRouter.get('/exams/:id/results', mustBeTeacher, wrap(async (req, res) => {
   const examId = Number(req.params.id)
-  const exam = getExam(examId)
+  const exam = await getExam(examId)
   if (!exam) return res.status(404).json({ error: 'Exam not found' })
-  const results = listExamResults(examId)
-  const assignedCount = assignedStudentIds(examId).length
+  const results = await listExamResults(examId)
+  const assignedCount = await assignedStudentIds(examId).length
   const perQuestion = exam.questions.map((q, idx) => {
     let total = 0
     let correct = 0
@@ -479,9 +479,9 @@ teacherRouter.get('/exams/:id/results', mustBeTeacher, wrap(async (req, res) => 
 teacherRouter.get('/exams/:id/results/:studentId', mustBeTeacher, wrap(async (req, res) => {
   const examId = Number(req.params.id)
   const studentId = Number(req.params.studentId)
-  const exam = getExam(examId)
+  const exam = await getExam(examId)
   if (!exam) return res.status(404).json({ error: 'Exam not found' })
-  const result = getExamStudentResult(examId, studentId)
+  const result = await getExamStudentResult(examId, studentId)
   if (!result) return res.status(404).json({ error: 'Student result not found' })
   const answers = result.answers ? JSON.parse(result.answers) : {}
   const { counted } = gradeExam(exam, answers)
@@ -500,7 +500,7 @@ teacherRouter.get('/exams/:id/results/:studentId', mustBeTeacher, wrap(async (re
 // ── Teacher: Insights ──
 teacherRouter.get('/insights/class', mustBeTeacher, wrap(async (req, res) => {
   const { getTeacherInsightsData } = await import('./db.js')
-  const stats = getTeacherInsightsData(req.user.id)
+  const stats = await getTeacherInsightsData(req.user.id)
   
   if (!stats.length) {
     return res.json({ 
@@ -552,16 +552,16 @@ teacherRouter.get('/insights/class', mustBeTeacher, wrap(async (req, res) => {
 
 const dailyAILimit = parseInt(env.AI_DAILY_QUESTION_LIMIT || '0', 10) || 0
 
-function aiBudgetFor(userId) {
+async function aiBudgetFor(userId) {
   const dayStart = new Date()
   dayStart.setHours(0, 0, 0, 0)
-  const used = aiUsageSince(userId, dayStart.getTime()).questions
+  const used = (await aiUsageSince(userId, dayStart.getTime())).questions
   return { used, limit: dailyAILimit, remaining: dailyAILimit ? Math.max(0, dailyAILimit - used) : null }
 }
 
 // Reject when a daily question budget is configured and this request would exceed it.
-function assertAiBudget(res, userId, extra) {
-  const b = budgetOk(userId, extra)
+async function assertAiBudget(res, userId, extra) {
+  const b = await budgetOk(userId, extra)
   if (b.ok) return true
   res.status(429).json({ error: `Daily AI question budget reached (${b.limit}). Sent to ${b.used}; resets tomorrow.` })
   return false
@@ -570,9 +570,9 @@ function assertAiBudget(res, userId, extra) {
 // Non-blocking variant for background work: a queued subject that cannot run
 // today is skipped in place, not dropped — the queue forgets it, so a later
 // read re-queues it with no data loss.
-function budgetOk(userId, extra) {
+async function budgetOk(userId, extra) {
   if (!dailyAILimit) return { ok: true, used: 0, limit: null, remaining: null }
-  const b = aiBudgetFor(userId)
+  const b = await aiBudgetFor(userId)
   return { ok: b.used + extra <= b.limit, used: b.used, limit: b.limit, remaining: Math.max(0, b.limit - b.used) }
 }
 
@@ -595,9 +595,9 @@ function logAiSummary(req, action, info = {}) {
   }
 }
 
-function recordAi(req, action, info = {}) {
+async function recordAi(req, action, info = {}) {
   try {
-    logAiUsage({
+    await logAiUsage({
       userId: req.user.id,
       action,
       model: info.model ?? null,
@@ -794,8 +794,8 @@ teacherRouter.get('/ai/models', mustBeTeacher, wrap(async (req, res) => {
 
 // Per-teacher AI usage + audit trail. Supports cost control and shows what went where.
 teacherRouter.get('/ai/usage', mustBeTeacher, wrap(async (req, res) => {
-  const budget = aiBudgetFor(req.user.id)
-  res.json({ ...budget, logs: recentAiLogs(req.user.id, 40) })
+  const budget = await aiBudgetFor(req.user.id)
+  res.json({ ...budget, logs: await recentAiLogs(req.user.id, 40) })
 }))
 
 // Re-run the click-through speed test for every configured key, save the ranking.
@@ -1122,7 +1122,7 @@ async function generateQuestionsPayload(req, spec, n, { onStep, shouldStop } = {
 teacherRouter.post('/ai/generate', mustBeTeacher, wrap(async (req, res) => {
   const { count } = req.body || {}
   const n = Math.max(1, Math.min(9000, parseInt(count) || 10))
-  if (!assertAiBudget(res, req.user.id, n)) return
+  if (!(await assertAiBudget(res, req.user.id, n))) return
 
   const spec = req.body || {}
   if (n > SYNC_GENERATE_MAX) {
@@ -1142,7 +1142,7 @@ teacherRouter.post('/ai/generate', mustBeTeacher, wrap(async (req, res) => {
 teacherRouter.post('/ai/generate/stream', mustBeTeacher, wrap(async (req, res) => {
   const { count } = req.body || {}
   const n = Math.max(1, Math.min(SYNC_GENERATE_MAX, parseInt(count) || 10))
-  if (!assertAiBudget(res, req.user.id, n)) return
+  if (!(await assertAiBudget(res, req.user.id, n))) return
   if (n > SYNC_GENERATE_MAX) {
     return res.status(400).json({ error: `A batch of ${n} is too large for a live stream — use a background job instead.` })
   }
@@ -1191,7 +1191,7 @@ teacherRouter.post('/ai/generate/stream', mustBeTeacher, wrap(async (req, res) =
 // Start a background generation. Returns immediately; poll /ai/jobs/:id.
 teacherRouter.post('/ai/jobs', mustBeTeacher, wrap(async (req, res) => {
   const n = Math.max(1, Math.min(9000, parseInt(req.body?.count) || 10))
-  if (!assertAiBudget(res, req.user.id, n)) return
+  if (!(await assertAiBudget(res, req.user.id, n))) return
   const job = createJob(req.user.id, { ...req.body, count: n })
   res.status(202).json({ jobId: job.id, requested: n, status: 'running' })
   void runJob(job)
@@ -1283,7 +1283,7 @@ async function runJob(job) {
         localQuestions ? `${localQuestions} question${localQuestions === 1 ? '' : 's'} used local templates to complete the batch.` : null,
       ].filter(Boolean).join(' ') || null,
     })
-    logAiUsage({ userId: job.userId, action: 'generate-job', model: null, provider: null, count: questions.length, latencyMs: Date.now() - job.startedAt, ok: questions.length > 0 })
+    await logAiUsage({ userId: job.userId, action: 'generate-job', model: null, provider: null, count: questions.length, latencyMs: Date.now() - job.startedAt, ok: questions.length > 0 })
     console.log(`[ai] generate-job ${job.id} done: ${questions.length}/${target} in ${Math.round((Date.now() - job.startedAt) / 1000)}s`)
   } catch (err) {
     failJob(job.id, err?.message || String(err))
@@ -1306,7 +1306,7 @@ async function generateSubjectBank({ userId, subject, level }) {
   }
   // A subject the teacher removed while this task sat in the queue should not
   // build a bank nobody configured: generation stops being worth it.
-  const stillTeaching = getTeacherSubjects(userId).some((s) => s.subject === subject && s.level === level)
+  const stillTeaching = await getTeacherSubjects(userId).some((s) => s.subject === subject && s.level === level)
   if (!stillTeaching) {
     console.warn(`[bank-prep] ${subject} (${level}) skipped: no longer taught`)
     return
@@ -1332,7 +1332,7 @@ async function generateSubjectBank({ userId, subject, level }) {
     if (collected.length === before) break
   }
   if (collected.length === 0) {
-    logAiUsage({ userId, action: 'bank-prep', count: 0, latencyMs: Date.now() - t0, ok: false, model })
+    await logAiUsage({ userId, action: 'bank-prep', count: 0, latencyMs: Date.now() - t0, ok: false, model })
     throw new Error(`no questions generated for ${subject} (${level})`)
   }
   const fresh = []
@@ -1344,12 +1344,12 @@ async function generateSubjectBank({ userId, subject, level }) {
     // Exact-prompt guard: a question the teacher already owns — from any phase —
     // is not re-added. The model is the same author as the teacher's past bank,
     // so duplicates are more likely than the web tier's.
-    if (findDuplicateQuestion(q.prompt, userId)) continue
+    if (await findDuplicateQuestion(q.prompt, userId)) continue
     fresh.push({ ...q, class_level: level })
   }
   let saved = []
-  if (fresh.length) saved = insertQuestionsBulk(fresh, userId)
-  logAiUsage({ userId, action: 'bank-prep', count: saved.length, latencyMs: Date.now() - t0, ok: saved.length > 0, model })
+  if (fresh.length) saved = await insertQuestionsBulk(fresh, userId)
+  await logAiUsage({ userId, action: 'bank-prep', count: saved.length, latencyMs: Date.now() - t0, ok: saved.length > 0, model })
   console.log(`[bank-prep] ${subject} (${level}): ${saved.length} new of ${want} wanted (${engines.length} engine calls)`)
 }
 
@@ -1374,8 +1374,8 @@ const bankStatus = (userId, subjects, counts) => {
 // gets their generation back.
 teacherRouter.get('/my/subjects', mustBeTeacher, wrap(async (req, res) => {
   const userId = req.user.id
-  const subjects = getTeacherSubjects(userId)
-  const counts = bankCounts(userId)
+  const subjects = await getTeacherSubjects(userId)
+  const counts = await bankCounts(userId)
   const wants = subjects.filter((s) => {
     const have = counts.find((c) => c.level === s.level && c.subject === s.subject)?.n || 0
     return have < bankTarget() && !isBankQueued({ userId, subject: s.subject, level: s.level })
@@ -1402,7 +1402,7 @@ teacherRouter.put('/my/subjects', mustBeTeacher, rateLimit({ max: 60, message: '
     validated.push({ subject, level })
   }
 
-  replaceTeacherSubjects(req.user.id, validated)
+  await replaceTeacherSubjects(req.user.id, validated)
   const queued = enqueueBankPrep(validated.map((s) => ({ userId: req.user.id, subject: s.subject, level: s.level })))
   res.status(200).json({ saved: validated.length, queued, target: bankTarget() })
 }))
@@ -1586,7 +1586,7 @@ studentRouter.post('/ai/explain', mustBeStudent, wrap(async (req, res) => {
 
 studentRouter.get('/my/recommendations', mustBeStudent, wrap(async (req, res) => {
   const { listAssignedExamsWithResults } = await import('./db.js')
-  const history = listAssignedExamsWithResults(req.user.id)
+  const history = await listAssignedExamsWithResults(req.user.id)
   
   if (!history.length) {
     return res.json({ summary: 'Start taking exams to get personalized recommendations!', recommendations: [] })
@@ -2033,7 +2033,7 @@ teacherRouter.post('/ai/embed', mustBeTeacher, wrap(async (req, res) => {
 
     // Rank the bank against the fresh vector. cosineSimilarity is reused rather
     // than reimplemented here.
-    const bank = questionFingerprints(req.user.id)
+    const bank = await questionFingerprints(req.user.id)
     const { cosineSimilarity } = await import('./dedupe.js')
     const top = bank
       .map((row) => ({
@@ -2347,15 +2347,15 @@ function buildExamReview(exam, answers = {}, counted = []) {
 }
 
 studentRouter.get('/my/exams', mustBeStudent, wrap(async (req, res) => {
-  res.json({ exams: listAssignedExamsWithResults(req.user.id) })
+  res.json({ exams: await listAssignedExamsWithResults(req.user.id) })
 }))
 
 studentRouter.get('/my/exams/:id', mustBeStudent, wrap(async (req, res) => {
   const examId = Number(req.params.id)
-  if (!isAssigned(examId, req.user.id)) return res.status(403).json({ error: 'This exam is not assigned to you' })
-  const existing = getResult(examId, req.user.id)
+  if (!await isAssigned(examId, req.user.id)) return res.status(403).json({ error: 'This exam is not assigned to you' })
+  const existing = await getResult(examId, req.user.id)
   if (existing) return res.status(409).json({ error: 'You have already submitted this exam' })
-  const exam = getExam(examId)
+  const exam = await getExam(examId)
   res.json({
     exam: {
       id: exam.id,
@@ -2382,12 +2382,12 @@ studentRouter.get('/my/exams/:id', mustBeStudent, wrap(async (req, res) => {
 
 studentRouter.post('/my/exams/:id/submit', mustBeStudent, rateLimit({ max: 20 }), wrap(async (req, res) => {
   const examId = Number(req.params.id)
-  if (!isAssigned(examId, req.user.id)) return res.status(403).json({ error: 'This exam is not assigned to you' })
-  const exam = getExam(examId)
+  if (!await isAssigned(examId, req.user.id)) return res.status(403).json({ error: 'This exam is not assigned to you' })
+  const exam = await getExam(examId)
   const { answers = {}, marked = 0, tabLeaves = 0 } = req.body || {}
   if (typeof answers !== 'object' || answers === null) return res.status(400).json({ error: 'Invalid answers payload' })
 
-  const existing = getResult(examId, req.user.id)
+  const existing = await getResult(examId, req.user.id)
   if (existing) return res.status(409).json({ error: 'Exam already submitted' })
 
   let score = 0
@@ -2403,7 +2403,7 @@ studentRouter.post('/my/exams/:id/submit', mustBeStudent, rateLimit({ max: 20 })
     marked: Number(marked) || 0,
     tabLeaves: Number(tabLeaves) || 0,
   }
-  saveResult(result)
+  await saveResult(result)
 
   const review = buildExamReview(exam, answers, counted)
   res.status(201).json({ score, total, marked: result.marked, review })
@@ -2411,9 +2411,9 @@ studentRouter.post('/my/exams/:id/submit', mustBeStudent, rateLimit({ max: 20 })
 
 studentRouter.get('/my/results/:examId', mustBeStudent, wrap(async (req, res) => {
   const examId = Number(req.params.examId)
-  const result = getResult(examId, req.user.id)
+  const result = await getResult(examId, req.user.id)
   if (!result) return res.status(404).json({ error: 'No result found' })
-  const exam = getExam(examId)
+  const exam = await getExam(examId)
   const storedAnswers = result.answers ? JSON.parse(result.answers) : {}
   // Re-derive what counted so an old result still reads correctly against a
   // paper that now carries an optional section.
